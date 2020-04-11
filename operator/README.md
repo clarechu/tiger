@@ -1,4 +1,5 @@
 # Kubernetes Operator
+![img](http://img3.imgtn.bdimg.com/it/u=2063911273,1341963068&fm=26&gp=0.jpg)
   * Operator 是由 CoreOS 开发的，用来扩展 Kubernetes API，特定的应用程序控制器，它用来创建、配置和管理复杂的有状态应用，如数据库、缓存和监控系统。Operator 基于 Kubernetes 的资源和控制器概念之上构建，但同时又包含了应用程序特定的领域知识。创建Operator 的关键是CRD（自定义资源）的设计。 
   * Kubernetes 1.7 版本以来就引入了自定义控制器的概念，该功能可以让开发人员扩展添加新功能，更新现有的功能，并且可以自动执行一些管理任务，这些自定义的控制器就像 Kubernetes 原生的组件一样，Operator 直接使用 Kubernetes API进行开发，也就是说他们可以根据这些控制器内部编写的自定义规则来监控集群、更改 Pods/Services、对正在运行的应用进行扩缩容。
 
@@ -121,14 +122,43 @@ $ operator-sdk generate k8s
 执行下面的命令构建 Operator 应用打包成 Docker 镜像：
 
 ```bash
-operator-sdk build cnych/opdemo                         
-INFO[0002] Building Docker image cnych/opdemo           
+operator-sdk build cnych/opdemo
+INFO[0002] Building Docker image cnych/opdemo
 Sending build context to Docker daemon  400.7MB
 Step 1/7 : FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:7.6
 ......
 Successfully built a8cde91be6ab
 Successfully tagged cnych/opdemo:latest
-INFO[0053] Operator build complete.              
+INFO[0053] Operator build complete.
 
 ```
 
+运行：
+
+```yaml
+$ docker run -e WATCH_NAMESPACE=kube-system  cnych/opdemo:latest
+```
+
+```log
+{"level":"info","ts":1586607749.180708,"logger":"cmd","msg":"Operator Version: 0.0.1"}
+{"level":"info","ts":1586607749.1809702,"logger":"cmd","msg":"Go Version: go1.14"}
+{"level":"info","ts":1586607749.1810098,"logger":"cmd","msg":"Go OS/Arch: linux/amd64"}
+{"level":"info","ts":1586607749.1810224,"logger":"cmd","msg":"Version of operator-sdk: v0.16.0"}
+{"level":"error","ts":1586607749.182614,"logger":"cmd","msg":"","error":"could not locate a kubeconfig","stacktrace":"github.com/go-logr/zapr.(*zapLogger).Error\n\t/Users/clare/go/pkg/mod/github.com/go-logr/zapr@v0.1.1/zapr.go:128\nmain.main\n\toperator/cmd/manager/main.go:83\nruntime.main\n\t/usr/local/go/src/runtime/proc.go:203"}
+```
+
+接下来我们需要创建crd 资源
+
+```yaml
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: appversion.example.com
+spec:
+  group: example.com
+  version: v1
+  names:
+    kind: Appversion
+    plural: appversions
+  scope: Namespaced
+```
