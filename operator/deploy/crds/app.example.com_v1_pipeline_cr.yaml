@@ -1,0 +1,7 @@
+apiVersion: app.example.com/v1
+kind: Pipeline
+metadata:
+  name: example-pipeline
+spec:
+  # Add fields here
+  size: 3

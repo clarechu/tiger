@@ -70,6 +70,7 @@ rules:
   - app.example.com
   resources:
   - '*'
+  - pipelines
   verbs:
   - create
   - delete
