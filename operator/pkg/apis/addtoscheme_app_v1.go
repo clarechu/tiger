@@ -1,7 +1,7 @@
 package apis
 
 import (
-	v1 "github.com/ClareChu/tigger/operator/pkg/apis/app/v1"
+	v1 "github.com/ClareChu/tiger/operator/pkg/apis/app/v1"
 )
 
 func init() {

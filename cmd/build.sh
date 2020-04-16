@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-go build -o tigger
+go build -o tiger
 

@@ -2,18 +2,31 @@ package pretty
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
-	"unicode/utf8"
 )
 
+type PrettyInterface interface {
+	New(o interface{}) (pretty *Pretty)
+	Print() error
+}
+
 type Pretty struct {
-	datas []data
+	o      interface{}
+	data   [][]interface{}
+	length []int
+	err    error
+	real   bool
 }
 
 type TAG string
 
+type SizeError string
+
 const (
-	DefaultTag TAG = "json"
+	DefaultTag  TAG       = "json"
+	SizeInvalid string = "<invalid reflect.Value>"
+	SizeNil int = 5
 )
 
 type data struct {
@@ -21,46 +34,53 @@ type data struct {
 	data   []string
 }
 
+//Set 初始化
 func New(o interface{}) (pretty *Pretty) {
-	return &Pretty{}
+	return &Pretty{o: o}
 }
 
-func Max(i []interface{}) int {
-	var max int
-	defer func() {
-		if err := recover(); err != nil {
-			return
-		}
-	}()
-	for _, a := range i {
-		kind := reflect.TypeOf(a).Elem().Kind()
-		if kind == reflect.Struct || kind == reflect.Ptr {
-			continue
-		}
+func (pretty *Pretty) IsReal() *Pretty {
+	pretty.real = true
+	return pretty
+}
 
-		str := a.(string)
-		count := utf8.RuneCountInString(str)
-		if count > max {
-			max = count
+func (pretty *Pretty) Print() error {
+	pretty.ToSlice()
+	if pretty.err != nil {
+		return pretty.err
+	}
+	pretty.max().Run()
+	return nil
+}
+
+//Max
+func (pretty *Pretty) max() *Pretty {
+	length := []int{}
+	// O = i*j
+	for i := 0; i < len(pretty.data); i++ {
+		for j := 0; j < len(pretty.data[i]); j++ {
+			size := getSize(pretty.data[i][j], pretty.real)
+			if i == 0 {
+				length = append(length, size)
+			} else if size > length[j] {
+				length[j] = size
+			}
 		}
 	}
-	return max
+	pretty.length = length
+	return pretty
 }
 
-func Length(l string) int32 {
-
-	return 0
-}
-
-func ToSlice(i interface{}, tag ...TAG) ([][]interface{}, error) {
+func (pretty *Pretty) ToSlice(tag ...TAG) *Pretty {
 	dx, dy := 0, 0
 	//set heard
-	value := indirect(reflect.ValueOf(i))
+	value := indirect(reflect.ValueOf(pretty.o))
 	// i is size =0
 	if value.Kind() == reflect.Slice {
 		length := value.Len()
 		if length == 0 {
-			return nil, errors.New("slice length size 0")
+			pretty.err = errors.New("slice length size 0")
+			return pretty
 		}
 		dx = value.Index(0).Type().NumField()
 		dy = length + 1
@@ -75,18 +95,17 @@ func ToSlice(i interface{}, tag ...TAG) ([][]interface{}, error) {
 		}
 		break
 	}
-	//tp := reflect.TypeOf(i)
 
 	//set body
 	for i := 0; i < value.Len(); i++ {
 		types := value.Index(i).Type()
 		values := value.Index(i)
 		for j := 0; j < types.NumField(); j++ {
-			key := values.Field(j).Interface()
-			data[i+1][j] = key
+			data[i+1][j] = getValues(values.Field(j))
 		}
 	}
-	return data, nil
+	pretty.data = data
+	return pretty
 }
 
 func indirect(reflectValue reflect.Value) reflect.Value {
@@ -96,36 +115,86 @@ func indirect(reflectValue reflect.Value) reflect.Value {
 	return reflectValue
 }
 
-/*
-func isPointer(p reflect.Type) reflect.Value {
-	kind := p.Kind()
-	if kind == reflect.Ptr {
-		p.Elem()
-	}
-
-	return
+//GetValues 获取当前字段的值
+func getValues(values reflect.Value) interface{} {
+	defer func() {
+		err := recover()
+		if err != nil {
+		}
+	}()
+	return values.Interface()
 }
-*/
 
-func GetSize(o interface{}) int {
-	b := []byte(o.(string))
+func getSize(o interface{}, real bool) int {
+	if o == nil {
+		return SizeNil
+	}
+	if real && reflect.ValueOf(o).Kind() == reflect.Ptr {
+		return getSize(reflect.ValueOf(o).Elem(), real)
+	}
+	s := fmt.Sprintf("%v", o)
+	if s == SizeInvalid {
+		return SizeNil
+	}
+	b := []byte(s)
 	return len(b)
 }
-
-
 
 func InitSlice(dx, dy int) [][]interface{} {
 	a := make([][]interface{}, dy)
 	for i := range a {
 		a[i] = make([]interface{}, dx)
 	}
+
 	return a
 }
 
 func IsTag(tags ...TAG) string {
-
 	for _, tag := range tags {
 		return string(tag)
 	}
 	return string(DefaultTag)
+}
+
+func (pretty *Pretty) Run() {
+	p := ""
+	for i := 0; i < len(pretty.data); i++ {
+		for j := 0; j < len(pretty.data[i]); j++ {
+			d := ""
+			if !pretty.real {
+				d = TrimSpace(pretty.data[i][j], pretty.length[j], pretty.real)
+			} else {
+				d = TrimSpacePre(pretty.data[i][j], pretty.length[j], pretty.real)
+			}
+
+			p = fmt.Sprintf("%v%v", p, d)
+		}
+		fmt.Println(p)
+		p = ""
+	}
+}
+
+func TrimSpace(d interface{}, length int, real bool) string {
+	p := ""
+	for i := getSize(d, real); i < length+2; i++ {
+		p = fmt.Sprintf("%v%s", p, " ")
+	}
+	return fmt.Sprintf("%v%v", d, p)
+}
+
+func TrimSpacePre(d interface{}, length int, real bool) string {
+	p := ""
+	for i := getSize(d, real); i < length+2; i++ {
+		p = fmt.Sprintf("%v%s", p, " ")
+	}
+	d = realVal(reflect.ValueOf(d))
+	return fmt.Sprintf("%v%v", d, p)
+}
+
+func realVal(value reflect.Value) (o interface{}) {
+	if value.Kind() == reflect.Ptr {
+		return realVal(value.Elem())
+	}
+	o = getValues(value)
+	return
 }

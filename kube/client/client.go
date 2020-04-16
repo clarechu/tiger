@@ -9,14 +9,21 @@ import (
 	"path/filepath"
 )
 
-func NewK8sClientSet() (clientset *kubernetes.Clientset, err error) {
-	var kubeconfig *string
+type Client interface {
+	GetDefaultK8sClientSet() (clientset *kubernetes.Clientset, err error)
+	GetDefaultApiExtensionClientSet() (clientSet *apiextension.Clientset, err error)
+	GetK8sClientSet(kubeConfig string) (clientset *kubernetes.Clientset, err error)
+	GetApiExtensionClientSet(kubeConfig string) (clientSet *apiextension.Clientset, err error)
+}
+
+func GetDefaultK8sClientSet() (clientset *kubernetes.Clientset, err error) {
+	var kubeConfig *string
 	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		kubeConfig = flag.String("kubeConfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeConfig file")
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		kubeConfig = flag.String("kubeConfig", "", "absolute path to the kubeConfig file")
 	}
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeConfig)
 	if err != nil {
 		return
 	}
@@ -24,14 +31,32 @@ func NewK8sClientSet() (clientset *kubernetes.Clientset, err error) {
 	return
 }
 
-func NewApiExtensionClientSet() (clientSet *apiextension.Clientset, err error) {
-	var kubeconfig *string
+func GetDefaultApiExtensionClientSet() (clientSet *apiextension.Clientset, err error) {
+	var kubeConfig *string
 	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		kubeConfig = flag.String("kubeConfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeConfig file")
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		kubeConfig = flag.String("kubeConfig", "", "absolute path to the kubeConfig file")
 	}
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeConfig)
+	if err != nil {
+		return
+	}
+	clientSet, err = apiextension.NewForConfig(config)
+	return
+}
+
+func GetK8sClientSet(kubeConfig string) (clientset *kubernetes.Clientset, err error) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
+	if err != nil {
+		return
+	}
+	clientset, err = kubernetes.NewForConfig(config)
+	return
+}
+
+func GetApiExtensionClientSet(kubeConfig string) (clientSet *apiextension.Clientset, err error) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
 		return
 	}

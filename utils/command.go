@@ -14,7 +14,7 @@ func Run(command *Command) (err error) {
 	envCmd := cmd.NewCmd(command.Name, command.Args...)
 	gms := <-envCmd.Start()
 	if gms.Error != nil {
-		fmt.Println(gms.Errorw)
+		fmt.Println(gms.Error)
 		return gms.Error
 	}
 	for _, out := range gms.Stdout {

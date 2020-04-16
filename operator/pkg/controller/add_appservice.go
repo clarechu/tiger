@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/ClareChu/tigger/operator/pkg/controller/appservice"
+	"github.com/ClareChu/tiger/operator/pkg/controller/appservice"
 )
 
 func init() {

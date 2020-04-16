@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/ClareChu/tigger/operator/pkg/controller/pipeline"
+	"github.com/ClareChu/tiger/operator/pkg/controller/pipeline"
 )
 
 func init() {

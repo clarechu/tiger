@@ -13,9 +13,9 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	"github.com/ClareChu/tigger/operator/pkg/apis"
-	"github.com/ClareChu/tigger/operator/pkg/controller"
-	"github.com/ClareChu/tigger/operator/version"
+	"github.com/ClareChu/tiger/operator/pkg/apis"
+	"github.com/ClareChu/tiger/operator/pkg/controller"
+	"github.com/ClareChu/tiger/operator/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"

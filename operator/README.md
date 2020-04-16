@@ -29,7 +29,7 @@ operator sdk 安装方法非常多，我们可以直接在 github 上面下载�
 ```bash
 $ brew install operator-sdk
 
-➜  tigger git:(master) ✗ operator-sdk version
+➜  tiger git:(master) ✗ operator-sdk version
 operator-sdk version: "v0.16.0", commit: "55f1446c5f472e7d8e308dcdf36d0d7fc44fc4fd", go version: "go1.14 darwin/amd64"
     
 ```

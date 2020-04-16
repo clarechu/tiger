@@ -2,13 +2,13 @@ package kube_test
 
 import (
 	"fmt"
-	"github.com/ClareChu/tigger/kube"
-	"github.com/ClareChu/tigger/kube/client"
+	"github.com/ClareChu/tiger/kube"
+	"github.com/ClareChu/tiger/kube/client"
 	"testing"
 )
 
 func TestResource_CURD(t *testing.T) {
-	clientSet, err := client.NewApiExtensionClientSet()
+	clientSet, err := client.GetDefaultApiExtensionClientSet()
 	if err != nil {
 		fmt.Println("client set error", err)
 		return

@@ -19,7 +19,7 @@ var (
 )
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version number of tigger",
+	Short: "Print the version number of tiger",
 	Args:  Args,
 	Long:  `All software has versions. This is Tigger's`,
 	Run:   Run,

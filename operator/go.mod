@@ -1,4 +1,4 @@
-module github.com/ClareChu/tigger/operator
+module github.com/ClareChu/tiger/operator
 
 go 1.13
 

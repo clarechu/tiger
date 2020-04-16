@@ -1,4 +1,4 @@
-module github.com/ClareChu/tigger
+module github.com/ClareChu/tiger
 
 go 1.14
 
@@ -15,11 +15,11 @@ require (
 	github.com/prometheus/common v0.4.0
 	github.com/spf13/cobra v0.0.6
 	gopkg.in/inf.v0 v0.9.1 // indirect
-	k8s.io/api v0.0.0-00010101000000-000000000000
+	istio.io/client-go v0.0.0-20200325170329-dc00bbff4229
+	k8s.io/api v0.17.4
 	k8s.io/apiextensions-apiserver v0.17.0
-	k8s.io/apimachinery v0.17.0
+	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v11.0.0+incompatible
-	k8s.io/klog v1.0.0 // indirect
 	k8s.io/utils v0.0.0-20200324210504-a9aa75ae1b89 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )

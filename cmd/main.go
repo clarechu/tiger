@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ClareChu/tigger/cmd/pkg"
+	"github.com/ClareChu/tiger/cmd/pkg"
 )
 
 func main() {
