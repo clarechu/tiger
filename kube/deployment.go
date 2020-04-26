@@ -34,6 +34,7 @@ func (c *Deployment) Update(name, namespace string) (err error) {
 func (c *Deployment) Get(name, namespace string) (deployment *v1.Deployment, err error) {
 	ops := meta_v1.GetOptions{}
 	deployment, err = c.clientset.AppsV1().Deployments(namespace).Get(name, ops)
+
 	return
 }
 
