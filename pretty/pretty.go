@@ -1,6 +1,7 @@
 package pretty
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -24,9 +25,9 @@ type TAG string
 type SizeError string
 
 const (
-	DefaultTag  TAG       = "json"
+	DefaultTag  TAG    = "json"
 	SizeInvalid string = "<invalid reflect.Value>"
-	SizeNil int = 5
+	SizeNil     int    = 5
 )
 
 type data struct {
@@ -197,4 +198,18 @@ func realVal(value reflect.Value) (o interface{}) {
 	}
 	o = getValues(value)
 	return
+}
+
+func A(ch chan int, ctx context.Context) {
+	for {
+		select {
+		case c := <-ch:
+			go func() {
+				fmt.Println("chan:", c)
+			}()
+		case <-ctx.Done():
+			fmt.Println("down")
+			return
+		}
+	}
 }

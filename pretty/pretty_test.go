@@ -1,10 +1,12 @@
 package pretty
 
 import (
+	"context"
 	"fmt"
 	"github.com/magiconair/properties/assert"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type Foo struct {
@@ -125,4 +127,26 @@ func TestPrint(t *testing.T) {
 	}
 	err := New(foos).Print()
 	assert.Equal(t, nil, err)
+}
+
+func TestA(t *testing.T) {
+	ch := make(chan int, 5)
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		A(ch, ctx)
+	}()
+	a := 0
+	//定时器
+	for {
+		time.Sleep(5 * time.Second)
+		fmt.Println("b")
+		ch <- 1
+		a++
+		if a == 5 {
+			fmt.Println("client down")
+			cancel()
+			return
+		}
+	}
+	time.Sleep(time.Minute)
 }
