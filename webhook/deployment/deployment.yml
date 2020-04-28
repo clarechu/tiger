@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sidecar-injector
+  namespace: istio-system
+  labels:
+    app: sidecar-injector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sidecar-injector
+  template:
+    metadata:
+      labels:
+        app: sidecar-injector
+    spec:
+      containers:
+        - name: sidecar-injector
+          image: harbor.cloud2go.cn/istio/sidecar-injector:0.0.2
+          imagePullPolicy: IfNotPresent
+          args:
+#            - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
+            - -tlsCertFile=/etc/certs/cert.pem
+            - -tlsKeyFile=/etc/certs/key.pem
+          volumeMounts:
+            - name: webhook-certs
+              mountPath: /etc/certs
+              readOnly: true
+#            - name: webhook-config
+#              mountPath: /etc/webhook/config
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: sidecar-injector-webhook-certs
+#        - name: webhook-config
+#          configMap:
+#            name: sidecar-injector-webhook-configmap
