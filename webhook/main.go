@@ -22,6 +22,7 @@ type WhSvrParameters struct {
 }
 
 func main() {
+	log.Infof("api version :%v", "0.0.10")
 	var parameters WhSvrParameters
 	// get command line parameters
 	flag.IntVar(&parameters.port, "port", 443, "Webhook server port.")
