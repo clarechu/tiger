@@ -18,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"sort"
 	"strings"
@@ -56,6 +57,7 @@ type WebhookServer struct {
 	MeshConfig             *meshconfig.MeshConfig
 	SidecarTemplateVersion string
 	Config                 *Config
+	clientSet              *kubernetes.Clientset
 }
 
 func init() {
@@ -132,6 +134,44 @@ func LoadConfig(configFile string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func (wh *WebhookServer) defaultBuild() (err error) {
+	meshConfig, err := wh.getMeshConfig()
+	if err != nil {
+		return
+	}
+	sidecarTemplate, err := i.sidecarTemplate()
+	if err != nil {
+		return
+	}
+	valueConfig, err := i.valuesConfig()
+	if err != nil {
+		return
+	}
+	wh.MeshConfig = meshConfig
+	wh.SidecarTemplateData = sidecarTemplate
+	wh.ValuesConfig = valueConfig
+	return nil
+}
+
+func (wh *WebhookServer) buildFile(meshconfigFile, injectConfigFile, valuesConfig string) (err error) {
+	meshConfig, err := i.getMeshConfig(meshconfigFile)
+	if err != nil {
+		return
+	}
+	sidecarTemplate, err := i.sidecarTemplate(injectConfigFile)
+	if err != nil {
+		return
+	}
+	valueConfig, err := i.valuesConfig(valuesConfig)
+	if err != nil {
+		return
+	}
+	wh.MeshConfig = meshConfig
+	wh.SidecarTemplateData = sidecarTemplate
+	wh.ValuesConfig = valueConfig
+	return nil
 }
 
 func (wh *WebhookServer) inject(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
@@ -271,7 +311,6 @@ func toAdmissionResponse(err error) *v1beta1.AdmissionResponse {
 	return &v1beta1.AdmissionResponse{Result: &metav1.Status{Message: err.Error()}}
 }
 
-
 // It would be great to use https://github.com/mattbaird/jsonpatch to
 // generate RFC6902 JSON patches. Unfortunately, it doesn't produce
 // correct patches for object removal. Fortunately, our patching needs
@@ -342,11 +381,9 @@ func createPatch(pod *corev1.Pod,
 	return json.Marshal(patch)
 }
 
-
 func extractCanonicalServiceLabels(podLabels map[string]string, workloadName string) (string, string) {
 	return extractCanonicalServiceLabel(podLabels, workloadName), extractCanonicalServiceRevision(podLabels)
 }
-
 
 func extractCanonicalServiceLabel(podLabels map[string]string, workloadName string) string {
 	if svc, ok := podLabels[model.IstioCanonicalServiceLabelName]; ok {
@@ -364,7 +401,6 @@ func extractCanonicalServiceLabel(podLabels map[string]string, workloadName stri
 	return workloadName
 }
 
-
 func extractCanonicalServiceRevision(podLabels map[string]string) string {
 	if rev, ok := podLabels[model.IstioCanonicalServiceRevisionLabelName]; ok {
 		return rev
@@ -380,7 +416,6 @@ func extractCanonicalServiceRevision(podLabels map[string]string) string {
 
 	return "latest"
 }
-
 
 func injectionStatus(pod *corev1.Pod) *inject.SidecarInjectionStatus {
 	var statusBytes []byte
@@ -412,8 +447,6 @@ func injectionStatus(pod *corev1.Pod) *inject.SidecarInjectionStatus {
 		Volumes:        legacyVolumeNames,
 	}
 }
-
-
 
 // JSONPatch `remove` is applied sequentially. Remove items in reverse
 // order to avoid renumbering indices.
@@ -603,8 +636,6 @@ func addLabels(target map[string]string, added map[string]string) []rfc6902Patch
 
 	return patches
 }
-
-
 
 func updateAnnotation(target map[string]string, added map[string]string) (patch []rfc6902PatchOperation) {
 	// To ensure deterministic patches, we sort the keys
