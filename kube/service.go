@@ -36,8 +36,7 @@ func (c *Service) Get(name, namespace string) (service *v1.Service, err error) {
 	return
 }
 
-func (c *Service) List(namespace string) (services *v1.ServiceList, err error) {
-	ops := meta_v1.ListOptions{}
+func (c *Service) List(namespace string, ops meta_v1.ListOptions) (services *v1.ServiceList, err error) {
 	services, err = c.clientset.CoreV1().Services(namespace).List(ops)
 	return
 }

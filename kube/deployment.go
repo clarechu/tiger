@@ -38,8 +38,7 @@ func (c *Deployment) Get(name, namespace string) (deployment *v1.Deployment, err
 	return
 }
 
-func (c *Deployment) List(namespace string) (deploymentList *v1.DeploymentList, err error) {
-	ops := meta_v1.ListOptions{}
+func (c *Deployment) List(namespace string, ops meta_v1.ListOptions) (deploymentList *v1.DeploymentList, err error) {
 	deploymentList, err = c.clientset.AppsV1().Deployments(namespace).List(ops)
 	return
 }

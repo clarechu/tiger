@@ -3,6 +3,7 @@ module github.com/ClareChu/tiger
 go 1.14
 
 require (
+	github.com/ClareChu/gorequest v0.2.19
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-cmd/cmd v1.2.0
@@ -24,7 +25,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.17.2
 	k8s.io/apimachinery v0.17.4
 	k8s.io/client-go v0.17.4
-	k8s.io/utils v0.0.0-20191114184206-e782cd3c129f // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
