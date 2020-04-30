@@ -103,7 +103,7 @@ func (i *Inject) getMeshConfig(meshConfigFile string) (meshConfig *meshconfig.Me
 		}
 	}
 
-	if meshConfig, err = i.configMap.getMeshConfigFromConfigMap("kube-inject"); err != nil {
+	if meshConfig, err = i.configMap.GetMeshConfigFromConfigMap("kube-inject"); err != nil {
 		return nil, err
 	}
 	return
@@ -121,7 +121,7 @@ func (i *Inject) sidecarTemplate(injectConfigFile string) (sidecarTemplate strin
 			return "", err
 		}
 		sidecarTemplate = injectConfig.Template
-	} else if sidecarTemplate, err = i.configMap.getInjectConfigFromConfigMap(); err != nil {
+	} else if sidecarTemplate, err = i.configMap.GetInjectConfigFromConfigMap(); err != nil {
 		return "", err
 	}
 	return sidecarTemplate, nil
@@ -135,7 +135,7 @@ func (i *Inject) valuesConfig(valuesFile string) (valuesConfig string, err error
 		}
 
 		valuesConfig = string(valuesConfigBytes)
-	} else if valuesConfig, err = i.configMap.getValuesFromConfigMap(); err != nil {
+	} else if valuesConfig, err = i.configMap.GetValuesFromConfigMap(); err != nil {
 		return "", err
 	}
 	return valuesConfig, nil

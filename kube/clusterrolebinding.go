@@ -7,37 +7,37 @@ import (
 )
 
 type ClusterRoleBinding struct {
-	clientset *kubernetes.Clientset
+	clientSet *kubernetes.Clientset
 }
 
-func NewClusterRoleBinding(clientset *kubernetes.Clientset) *ClusterRoleBinding {
-	return &ClusterRoleBinding{clientset: clientset}
+func NewClusterRoleBinding(clientSet *kubernetes.Clientset) *ClusterRoleBinding {
+	return &ClusterRoleBinding{clientSet: clientSet}
 }
 
 func (c *ClusterRoleBinding) Create(clusterRoleBind *v1beta1.ClusterRoleBinding) (err error) {
-	clusterRoleBind, err = c.clientset.RbacV1beta1().ClusterRoleBindings().Create(clusterRoleBind)
+	clusterRoleBind, err = c.clientSet.RbacV1beta1().ClusterRoleBindings().Create(clusterRoleBind)
 	return
 }
 
 func (c *ClusterRoleBinding) Delete(name string) (err error) {
 	ops := &meta_v1.DeleteOptions{}
-	err = c.clientset.RbacV1beta1().ClusterRoleBindings().Delete(name, ops)
+	err = c.clientSet.RbacV1beta1().ClusterRoleBindings().Delete(name, ops)
 	return
 }
 
 func (c *ClusterRoleBinding) Update(clusterRoleBind *v1beta1.ClusterRoleBinding) (err error) {
-	clusterRoleBind, err = c.clientset.RbacV1beta1().ClusterRoleBindings().Update(clusterRoleBind)
+	clusterRoleBind, err = c.clientSet.RbacV1beta1().ClusterRoleBindings().Update(clusterRoleBind)
 	return
 }
 
 func (c *ClusterRoleBinding) Get(name string) (clusterRoleBind *v1beta1.ClusterRoleBinding, err error) {
 	ops := meta_v1.GetOptions{}
-	clusterRoleBind, err = c.clientset.RbacV1beta1().ClusterRoleBindings().Get(name, ops)
+	clusterRoleBind, err = c.clientSet.RbacV1beta1().ClusterRoleBindings().Get(name, ops)
 	return
 }
 
 func (c *ClusterRoleBinding) List(name string) (clusterRoleBinds *v1beta1.ClusterRoleBindingList, err error) {
 	ops := meta_v1.ListOptions{}
-	clusterRoleBinds, err = c.clientset.RbacV1beta1().ClusterRoleBindings().List(ops)
+	clusterRoleBinds, err = c.clientSet.RbacV1beta1().ClusterRoleBindings().List(ops)
 	return
 }

@@ -22,6 +22,9 @@ func NewVirtualService(clientset *client.Clientset) *Virtual {
 
 func (v *Virtual) Create(namespace string, vs *v1alpha3.VirtualService) {
 	vs, err := v.clientset.NetworkingV1alpha3().VirtualServices(namespace).Create(vs)
+	if err != nil {
+
+	}
 	return
 }
 

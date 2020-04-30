@@ -4,8 +4,10 @@ import (
 	"errors"
 	"flag"
 	client "istio.io/client-go/pkg/clientset/versioned"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+	"os"
 	"path/filepath"
 )
 
@@ -21,9 +23,17 @@ func GetDefaultClient() (clientSet *client.Clientset, err error) {
 	} else {
 		kubeConfig = flag.String("kubeConfig", "", "absolute path to the kubeConfig file")
 	}
-	restConfig, err := clientcmd.BuildConfigFromFlags("", *kubeConfig)
-	if err != nil {
-		return nil, err
+	var restConfig *rest.Config
+	if os.Getenv("KUBERNETES_SERVICE_HOST") == "" {
+		restConfig, err = clientcmd.BuildConfigFromFlags("", *kubeConfig)
+		if err != nil {
+			return
+		}
+	} else {
+		restConfig, err = rest.InClusterConfig()
+		if err != nil {
+			return
+		}
 	}
 
 	ic, err := client.NewForConfig(restConfig)

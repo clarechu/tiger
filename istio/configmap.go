@@ -26,7 +26,13 @@ type ConfigMap struct {
 	client *kubernetes.Clientset
 }
 
-func (c *ConfigMap) getMeshConfigFromConfigMap(name string, injectConfigMapNames ...string) (meshConfig *meshconfig.MeshConfig, err error) {
+func NewConfigMap(client *kubernetes.Clientset) *ConfigMap {
+	return &ConfigMap{
+		client: client,
+	}
+}
+
+func (c *ConfigMap) GetMeshConfigFromConfigMap(name string, injectConfigMapNames ...string) (meshConfig *meshconfig.MeshConfig, err error) {
 	meshConfigMapName := defaultMeshConfigMapName
 	if len(injectConfigMapNames) != 0 {
 		meshConfigMapName = injectConfigMapNames[0]
@@ -53,7 +59,7 @@ func (c *ConfigMap) getMeshConfigFromConfigMap(name string, injectConfigMapNames
 }
 
 //getInjectConfigFromConfigMap get inject configMap
-func (c *ConfigMap) getInjectConfigFromConfigMap(injectConfigMapNames ...string) (sidecarTemplate string, err error) {
+func (c *ConfigMap) GetInjectConfigFromConfigMap(injectConfigMapNames ...string) (sidecarTemplate string, err error) {
 	injectConfigMapName := defaultInjectConfigMapName
 	if len(injectConfigMapNames) != 0 {
 		injectConfigMapName = injectConfigMapNames[0]
@@ -81,7 +87,7 @@ func (c *ConfigMap) getInjectConfigFromConfigMap(injectConfigMapNames ...string)
 	return injectConfig.Template, nil
 }
 
-func (c *ConfigMap) getValuesFromConfigMap(injectConfigMapNames ...string) (valuesConfig string, err error) {
+func (c *ConfigMap) GetValuesFromConfigMap(injectConfigMapNames ...string) (valuesConfig string, err error) {
 	injectConfigMapName := defaultInjectConfigMapName
 	if len(injectConfigMapNames) != 0 {
 		injectConfigMapName = injectConfigMapNames[0]
@@ -100,4 +106,32 @@ func (c *ConfigMap) getValuesFromConfigMap(injectConfigMapNames ...string) (valu
 	}
 
 	return valuesData, nil
+}
+
+func (c *ConfigMap) GetInjectConfig(injectConfigMapNames ...string) (sidecarTemplate *istio_inject.Config, err error) {
+	injectConfigMapName := defaultInjectConfigMapName
+	if len(injectConfigMapNames) != 0 {
+		injectConfigMapName = injectConfigMapNames[0]
+	}
+	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(injectConfigMapName, metav1.GetOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("could not find valid configmap %q from namespace  %q: %v - "+
+			"Use --injectConfigFile or re-run kube-inject with `-i <istioSystemNamespace> and ensure istio-sidecar-injector configmap exists",
+			injectConfigMapName, istioNamespace, err)
+	}
+	// values in the data are strings, while proto might use a
+	// different data type.  therefore, we have to get a value by a
+	// key
+	injectData, exists := meshConfigMap.Data[injectConfigMapKey]
+	if !exists {
+		return nil, fmt.Errorf("missing configuration map key %q in %q",
+			injectConfigMapKey, injectConfigMapName)
+	}
+	var injectConfig istio_inject.Config
+	if err := yaml.Unmarshal([]byte(injectData), &injectConfig); err != nil {
+		return nil, fmt.Errorf("unable to convert data from configmap %q: %v",
+			injectConfigMapName, err)
+	}
+	log.Debugf("using inject template from configmap %q", injectConfigMapName)
+	return &injectConfig, nil
 }

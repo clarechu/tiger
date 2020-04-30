@@ -18,7 +18,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	gopkg.in/yaml.v2 v2.2.8
 	istio.io/api v0.0.0-20200325005357-8217d7225b6d
-	istio.io/client-go v0.0.0-20200325170329-dc00bbff4229
+	istio.io/client-go v0.0.0-20200316192452-065c59267750
 	istio.io/istio v0.0.0-20200323201801-9d07e185b0dd
 	istio.io/pkg v0.0.0-20200204185554-47b6d38ec784
 	k8s.io/api v0.17.4
@@ -30,6 +30,7 @@ require (
 
 replace (
 	istio.io/api => istio.io/api v0.0.0-20200316215140-da46fe8e25be
+	istio.io/client-go => istio.io/client-go v0.0.0-20200316192452-065c59267750
 	istio.io/istio => github.com/istio/istio v0.0.0-20200323201801-9d07e185b0dd
 	k8s.io/api => k8s.io/api v0.17.2
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.2

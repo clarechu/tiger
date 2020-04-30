@@ -8,7 +8,7 @@ type ServiceAccountInterface interface {
 
 type ServiceAccount struct {
 	ServiceAccountInterface
-	clientset *kubernetes.Clientset
+	clientSet *kubernetes.Clientset
 }
 
 func (s *ServiceAccount) Create() {

@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"github.com/ClareChu/tiger/kube/client"
 	"github.com/ClareChu/tiger/webhook/server"
 	"istio.io/pkg/log"
 	"net/http"
@@ -22,6 +23,7 @@ type WhSvrParameters struct {
 }
 
 func main() {
+	clientSet, err := client.GetDefaultK8sClientSet()
 	log.Infof("api version :%v", "0.0.10")
 	var parameters WhSvrParameters
 	// get command line parameters
@@ -47,6 +49,7 @@ func main() {
 			Addr:      fmt.Sprintf(":%v", parameters.port),
 			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
 		},
+		ClientSet: clientSet,
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/mutate", wh.Inject)

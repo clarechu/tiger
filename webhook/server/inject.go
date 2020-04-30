@@ -2,9 +2,11 @@ package server
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v2"
+	"github.com/ClareChu/tiger/istio"
+	"github.com/ClareChu/tiger/kube/client"
 	"io/ioutil"
 	"istio.io/api/annotation"
 	meshconfig "istio.io/api/mesh/v1alpha1"
@@ -52,12 +54,11 @@ type WhSvrParameters struct {
 type WebhookServer struct {
 	//SidecarConfig *Config
 	Server                 *http.Server
-	SidecarTemplateData    string
 	ValuesConfig           string
 	MeshConfig             *meshconfig.MeshConfig
 	SidecarTemplateVersion string
-	Config                 *Config
-	clientSet              *kubernetes.Clientset
+	Config                 *inject.Config
+	ClientSet              *kubernetes.Clientset
 }
 
 func init() {
@@ -68,10 +69,30 @@ func init() {
 	_ = v1beta1.AddToScheme(runtimeScheme)
 }
 
+// Config specifies the sidecar injection configuration This includes
+// the sidecar template and cluster-side injection policy. It is used
+// by kube-inject, sidecar injector, and http endpoint.
 type Config struct {
-	Containers          []corev1.Container `yaml:"containers"`
-	Volumes             []corev1.Volume    `yaml:"volumes"`
-	InjectedAnnotations map[string]string  `json:"injectedAnnotations"`
+	Policy inject.InjectionPolicy `json:"policy"`
+
+	// Template is the templated version of `SidecarInjectionSpec` prior to
+	// expansion over the `SidecarTemplateData`.
+	Template string `json:"template"`
+
+	// NeverInjectSelector: Refuses the injection on pods whose labels match this selector.
+	// It's an array of label selectors, that will be OR'ed, meaning we will iterate
+	// over it and stop at the first match
+	// Takes precedence over AlwaysInjectSelector.
+	NeverInjectSelector []metav1.LabelSelector `json:"neverInjectSelector"`
+
+	// AlwaysInjectSelector: Forces the injection on pods whose labels match this selector.
+	// It's an array of label selectors, that will be OR'ed, meaning we will iterate
+	// over it and stop at the first match
+	AlwaysInjectSelector []metav1.LabelSelector `json:"alwaysInjectSelector"`
+
+	// InjectedAnnotations are additional annotations that will be added to the pod spec after injection
+	// This is primarily to support PSP annotations.
+	InjectedAnnotations map[string]string `json:"injectedAnnotations"`
 }
 
 func (wh *WebhookServer) Inject(resp http.ResponseWriter, req *http.Request) {
@@ -94,6 +115,12 @@ func (wh *WebhookServer) Inject(resp http.ResponseWriter, req *http.Request) {
 		http.Error(resp, "invalid Content-Type, want `application/json`", http.StatusUnsupportedMediaType)
 		return
 	}
+	err := wh.defaultBuild()
+	if err != nil {
+		http.Error(resp, "invalid Content-Type, want `application/json`", http.StatusUnsupportedMediaType)
+		return
+	}
+	wh.SidecarTemplateVersion = sidecarTemplateVersionHash(wh.Config.Template)
 	var reviewResponse *v1beta1.AdmissionResponse
 	ar := v1beta1.AdmissionReview{}
 	if _, _, err := deserializer.Decode(body, nil, &ar); err != nil {
@@ -121,56 +148,38 @@ func (wh *WebhookServer) Inject(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func LoadConfig(configFile string) (*Config, error) {
-	data, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return nil, err
-	}
-	log.Infof("New configuration: sha256sum %x", sha256.Sum256(data))
-
-	var cfg Config
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, err
-	}
-
-	return &cfg, nil
+// helper function to generate a template version identifier from a
+// hash of the un-executed template contents.
+func sidecarTemplateVersionHash(in string) string {
+	hash := sha256.Sum256([]byte(in))
+	return hex.EncodeToString(hash[:])
 }
 
 func (wh *WebhookServer) defaultBuild() (err error) {
-	meshConfig, err := wh.getMeshConfig()
+	clientSet, err := client.GetDefaultK8sClientSet()
 	if err != nil {
+		log.Infof("get client set err:%v", err)
+		return err
+	}
+	configmap := istio.NewConfigMap(clientSet)
+	meshConfig, err := configmap.GetMeshConfigFromConfigMap("kube-inject")
+	if err != nil {
+		log.Infof("get client set err:%v", err)
 		return
 	}
-	sidecarTemplate, err := i.sidecarTemplate()
+	valueConfig, err := configmap.GetValuesFromConfigMap()
 	if err != nil {
-		return
-	}
-	valueConfig, err := i.valuesConfig()
-	if err != nil {
-		return
-	}
-	wh.MeshConfig = meshConfig
-	wh.SidecarTemplateData = sidecarTemplate
-	wh.ValuesConfig = valueConfig
-	return nil
-}
-
-func (wh *WebhookServer) buildFile(meshconfigFile, injectConfigFile, valuesConfig string) (err error) {
-	meshConfig, err := i.getMeshConfig(meshconfigFile)
-	if err != nil {
-		return
-	}
-	sidecarTemplate, err := i.sidecarTemplate(injectConfigFile)
-	if err != nil {
-		return
-	}
-	valueConfig, err := i.valuesConfig(valuesConfig)
-	if err != nil {
+		log.Infof("get valueConfig err:%v", err)
 		return
 	}
 	wh.MeshConfig = meshConfig
-	wh.SidecarTemplateData = sidecarTemplate
 	wh.ValuesConfig = valueConfig
+	c, err := configmap.GetInjectConfig()
+	if err != nil {
+		log.Infof("GetInjectConfig err:%v", err)
+		return
+	}
+	wh.Config = c
 	return nil
 }
 
@@ -265,7 +274,7 @@ func (wh *WebhookServer) inject(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionR
 		deployMeta.Name = pod.Name
 	}
 
-	spec, iStatus, err := inject.InjectionData(wh.SidecarTemplateData,
+	spec, iStatus, err := inject.InjectionData(wh.Config.Template,
 		wh.ValuesConfig,
 		wh.SidecarTemplateVersion,
 		typeMetadata,
@@ -298,11 +307,11 @@ func (wh *WebhookServer) inject(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionR
 
 	reviewResponse := v1beta1.AdmissionResponse{
 		Allowed: true,
-		Patch:   patchBytes,
-		PatchType: func() *v1beta1.PatchType {
-			pt := v1beta1.PatchTypeJSONPatch
-			return &pt
-		}(),
+				Patch:   patchBytes,
+				PatchType: func() *v1beta1.PatchType {
+					pt := v1beta1.PatchTypeJSONPatch
+					return &pt
+				}(),
 	}
 	return &reviewResponse
 }
