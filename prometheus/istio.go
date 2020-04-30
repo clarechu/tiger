@@ -3,8 +3,7 @@ package prometheus
 import "github.com/ClareChu/tiger/prometheus/client"
 
 type IstioMetrics struct {
-	Host      string `json:"host"`
-	Port      int32  `json:"port"`
+	client    *client.Client
 	Step      string `json:"step"`
 	StartTime string `json:"startTime"`
 	EndTime   string `json:"endTime"`
@@ -37,9 +36,23 @@ type RequestCountData struct {
 	SourceWorkloadNamespace      string `json:"source_workload_namespace"`
 }
 
+var (
+	RequestTotal = "istio_requests_total"
+)
+
+type IstioRequest struct {
+	Step      int     `json:"step"`
+	StartTime float64 `json:"startTime"`
+	EndTime   float64 `json:"endTime"`
+}
+
 //RequestCount (istio_requests_total) COUNTER对于由Istio代理处理的每个请求，此计数均递增。
-func (i *IstioMetrics) RequestCount(rcd *RequestCountData) (resp *client.ProRequest, err error) {
-	return
+func (i *IstioMetrics) RequestCount(rcd *RequestCountData, req *IstioRequest) (resp *client.PromeResponse, err error) {
+	return i.client.Metric(RequestTotal).
+		Query(rcd).
+		Step(req.Step).
+		Range(req.StartTime, req.EndTime).
+		Run()
 }
 
 type RequestDurationData struct {
@@ -48,18 +61,17 @@ type RequestDurationData struct {
 }
 
 //RequestCount (istio_request_duration_milliseconds) 这是DISTRIBUTION衡量请求持续时间的时间。
-func (i *IstioMetrics) RequestDuration() (resp *client.ProRequest, err error) {
+func (i *IstioMetrics) RequestDuration() (resp *client.PromeResponse, err error) {
 	return
 }
 
 //RequestSize (istio_request_bytes) 这是DISTRIBUTIONHTTP请求主体大小的度量。
-func (i *IstioMetrics) RequestSize() (resp *client.ProRequest, err error) {
+func (i *IstioMetrics) RequestSize() (resp *client.PromeResponse, err error) {
 	return
 }
 
-
 //ResponseSize (istio_response_bytes) 这是DISTRIBUTION衡量HTTP响应主体大小的一个。
-func (i *IstioMetrics) ResponseSize() (resp *client.ProRequest, err error) {
+func (i *IstioMetrics) ResponseSize() (resp *client.PromeResponse, err error) {
 	return
 }
 
@@ -71,7 +83,7 @@ istio_tcp_sent_bytes_total{connection_security_policy="none",destination_app="un
 */
 
 //TcpByteSent (istio_tcp_sent_bytes_total) 此参数COUNTER用于度量在TCP连接情况下响应期间发送的总字节数。
-func (i *IstioMetrics) TcpByteSent() (resp *client.ProRequest, err error) {
+func (i *IstioMetrics) TcpByteSent() (resp *client.PromeResponse, err error) {
 	return
 }
 
@@ -106,16 +118,16 @@ type TcpByteReceivedData struct {
 }
 
 //Tcp Byte Received（istio_tcp_received_bytes_total）：COUNTER用于测量在TCP连接情况下请求期间接收的总字节数。
-func (i *IstioMetrics) TcpByteReceived() (resp *client.ProRequest, err error) {
+func (i *IstioMetrics) TcpByteReceived() (resp *client.PromeResponse, err error) {
 	return
 }
 
 //Tcp Connections Opened（istio_tcp_connections_opened_total）：COUNTER每个打开的连接的增量。
-func (i *IstioMetrics) TcpConnectionsOpened() (resp *client.ProRequest, err error) {
+func (i *IstioMetrics) TcpConnectionsOpened() (resp *client.PromeResponse, err error) {
 	return
 }
 
 //Tcp连接已关闭（istio_tcp_connections_closed_total）：COUNTER对于每个关闭的连接，此值均递增。
-func (i *IstioMetrics) TcpConnectionsClosed() (resp *client.ProRequest, err error) {
+func (i *IstioMetrics) TcpConnectionsClosed() (resp *client.PromeResponse, err error) {
 	return
 }

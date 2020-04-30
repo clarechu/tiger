@@ -5,30 +5,44 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ClareChu/gorequest"
+	"reflect"
+	"regexp"
+	"strings"
 	"time"
 )
 
 type Prometheus interface {
-	Query(query string) *Client
-	Range(start, end float64) *Client
-	Step(step int) *Client
-	Run() (pro *ProRequest, err error)
+	New(url string) *Client
+	// 指标设置
+	Metric(query string) *Client
+	// 过滤对象
+	Query(query interface{}) *Client
+	//设置offset 修饰符
+	OffSet(offSet string) *Client
+	// 设置PromQL
+	PromQL(ql string) *Client
 }
+
+var (
+	DefaultTagKey = "pro"
+	MaRegex       = "\\{[^\\}]+\\}"
+)
 
 type Client struct {
 	Prometheus
-	host  string  `json:"host"`
-	port  int32   `json:"port"`
-	start float64 `json:"start"`
-	end   float64 `json:"end"`
-	step  int     `json:"step"`
-	query string  `json:"query"`
-	time  bool    `json:"time"`
-	url   string  `json:"url"`
+	request *gorequest.SuperAgent
+	metric  string
+	start   float64
+	end     float64
+	step    int
+	query   interface{}
+	time    bool
+	promeQL string
+	offset  string
 }
 
 //prometheus response result
-type ProRequest struct {
+type PromeResponse struct {
 	Status string `json:"status"`
 	Data   Data   `json:"data"`
 }
@@ -44,22 +58,23 @@ type Result struct {
 
 var DefaultPrometheusHost int32 = 9090
 
-func New(host string, ports ...int32) *Client {
-	var port int32
-	if len(ports) == 0 {
-		port = DefaultPrometheusHost
-	} else {
-		port = ports[0]
-	}
+func New(url string) *Client {
+	request := gorequest.New()
+	request.Url = url
 	return &Client{
-		host: host,
-		port: port,
+		request: request,
 	}
 }
 
 //Query 指标名称
-func (client *Client) Query(query string) *Client {
+func (client *Client) Query(query interface{}) *Client {
 	client.query = query
+	return client
+}
+
+//Query 指标名称
+func (client *Client) Metric(query string) *Client {
+	client.metric = query
 	return client
 }
 
@@ -83,17 +98,19 @@ func (client *Client) Step(step int) *Client {
 	return client
 }
 
-func (client *Client) Run() (pro *ProRequest, err error) {
-	client.setUrl().appendRange().appendParam()
-	fmt.Println("request url:", client.url)
-	resp, body, errs := gorequest.New().Get(client.url).End()
+func (client *Client) Run() (pro *PromeResponse, err error) {
+
+	url := appendApiVersion(client.request.Url, client.time)
+	url = client.appendParam(url)
+	fmt.Println("request url:", url)
+	resp, body, errs := client.request.Get(url).End()
 	if len(errs) != 0 {
 		return nil, errs[0]
 	}
 	if resp.StatusCode != 200 {
 		return nil, errors.New(body)
 	}
-	pro = &ProRequest{}
+	pro = &PromeResponse{}
 	err = json.Unmarshal([]byte(body), pro)
 	if err != nil {
 		return
@@ -101,43 +118,87 @@ func (client *Client) Run() (pro *ProRequest, err error) {
 	return
 }
 
-//1588150253687
-//1588150337
-//1588150254.061
-func (client *Client) setUrl() *Client {
-	url := fmt.Sprintf("http://%s:%d", client.host, client.port)
-	client.url = url
-	return client
-}
-
-func (client *Client) appendRange() *Client {
-	url := client.url
-	if client.time {
+func appendApiVersion(url string, time bool) string {
+	if time {
 		url = url + "/api/v1/query_range"
 	}
 	url = url + "/api/v1/query"
-	client.url = url
-	return client
+	return url
 }
 
-func (client *Client) appendParam() *Client {
+func (client *Client) appendParam(url string) string {
 	now := time.Now().Unix()
-	url := client.url
-	url = url + "?query=" + client.query
+	url = url + "?query=" + client.build()
 	if client.time {
 		url = fmt.Sprintf("%s&start=%f&end=%f", url, client.start, client.end)
 	} else {
 		if client.start == 0 {
+			//default 设置 当前时间一分钟之内的
 			client.start = float64(now - 60)
 			url = fmt.Sprintf("%s&time=%f", url, client.start)
 		}
-
 	}
 	url = fmt.Sprintf("%s&step=%d&_=%d", url, client.step, now)
-	client.url = url
+	return url
+}
+
+// 拼接 promeql
+func Where(o interface{}) string {
+	sql := ""
+	value := reflect.ValueOf(o)
+	t := reflect.TypeOf(o)
+	if value.Kind() == reflect.Ptr {
+		value = value.Elem()
+		t = t.Elem()
+	}
+	for i := 0; i < value.NumField(); i++ {
+		if value.Field(i).Kind() == reflect.String {
+			tag := t.Field(i).Tag.Get(DefaultTagKey)
+			if tag == "" {
+				tag = t.Field(i).Name
+			}
+			if value.Field(i).String() != "" {
+				r, err := regexp.Compile(MaRegex)
+				if err != nil {
+					return ""
+				}
+				if r.Match([]byte(sql)) {
+					temp := fmt.Sprintf(",%s=\"%s\"}", tag, value.Field(i).String())
+					sql = strings.Replace(sql, "}", temp, 1)
+				} else {
+					sql = fmt.Sprintf("{%s=\"%s\"}", tag, value.Field(i).String())
+				}
+
+			}
+		}
+	}
+	fmt.Println("query :", sql)
+	return sql
+}
+
+func (client *Client) PromQL(ql string) *Client {
+	client.promeQL = ql
 	return client
 }
 
-func PromQL(o interface{})  {
+func (client *Client) OffSet(offSet string) *Client {
+	client.offset = offSet
+	return client
+}
 
+func (client *Client) build() (sql string) {
+
+	if client.promeQL != "" {
+		return client.promeQL
+	}
+	if client.query == "" || client.query == nil {
+		sql = fmt.Sprintf("%s%s", client.metric, client.offset)
+	} else {
+		sql = fmt.Sprintf("%s%s%s", client.metric, Where(client.query), client.offset)
+	}
+	return sql
+}
+
+func (client *Client) where(have string, args ...interface{}) *Client {
+	return client
 }
