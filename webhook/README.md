@@ -51,3 +51,5 @@ webhooks:
 ```
 07 dispatcher.go:136] Failed calling webhook, failing open sidecar-injector.istio.io: failed calling webhook "sidecar-injector.istio.io": Post https://sidecar-injector.istio-system.svc:443/mutate?timeout=30s: http: server gave HTTP response to HTTPS client
 4月 28 01:14:13 localhost.localdomain kube-apiserver[1107]: E0428 01:14:13.539384    1107 dispatcher.go:137] failed calling webhook "sidecar-injector.istio.io": Post https://sidecar-injector.istio-system.svc:443/mutate?timeout=30s: http: server gave HTTP response to HTTPS client
+
+./webhook-create-signed-cert.sh --service sidecar-injector --namespace istio-system --secret sidecar-injector-webhook-certs
