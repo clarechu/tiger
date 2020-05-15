@@ -17,6 +17,7 @@ require (
 	github.com/prometheus/common v0.6.0
 	github.com/spf13/cobra v1.0.0
 	gopkg.in/yaml.v2 v2.2.8
+	gotest.tools v2.2.0+incompatible
 	istio.io/api v0.0.0-20200325005357-8217d7225b6d
 	istio.io/client-go v0.0.0-20200316192452-065c59267750
 	istio.io/istio v0.0.0-20200323201801-9d07e185b0dd

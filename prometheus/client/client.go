@@ -99,7 +99,6 @@ func (client *Client) Step(step int) *Client {
 }
 
 func (client *Client) Run() (pro *PromeResponse, err error) {
-
 	url := appendApiVersion(client.request.Url, client.time)
 	url = client.appendParam(url)
 	fmt.Println("request url:", url)

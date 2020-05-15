@@ -1,0 +1,440 @@
+apiVersion: cube.io/v1alpha1
+kind: PipelineConfig
+metadata:
+  generation: 1
+  name: ide
+  namespace: hidevopsio
+spec:
+  branch: master
+  events:
+    - eventTypes: imageStream
+      name: ide
+    - eventTypes: volume
+      name: ide
+    - eventTypes: deploy
+      name: ide
+    - eventTypes: service
+      name: ide
+    - eventTypes: gateway
+      name: ide
+    - eventTypes: callback
+      name: ide
+  profile: dev
+  version: v1
+
+---
+
+apiVersion: cube.io/v1alpha1
+kind: PipelineConfig
+metadata:
+  clusterName: ""
+  creationTimestamp: 2020-03-19T06:27:52Z
+  generation: 1
+  name: ide-path
+  namespace: hidevopsio
+  resourceVersion: "49023805"
+  selfLink: /apis/cube.io/v1alpha1/namespaces/hidevopsio/pipelineconfigs/ide-path
+  uid: c2b1eca1-69aa-11ea-ac3b-005056aca35e
+spec:
+  branch: master
+  events:
+    - eventTypes: imageStream
+      name: ide
+    - eventTypes: volume
+      name: ide
+    - eventTypes: deploy
+      name: ide
+    - eventTypes: service
+      name: ide
+    - eventTypes: gateway
+      name: ide-path
+    - eventTypes: callback
+      name: ide
+  profile: dev
+  version: v1
+
+---
+
+kind: PipelineConfig
+metadata:
+  generation: 1
+  name: sonar
+  namespace: hidevopsio
+spec:
+  events:
+    - eventTypes: imageStream
+      name: ide
+    - eventTypes: deploy
+      name: sonar
+    - eventTypes: service
+      name: sonar
+    - eventTypes: callback
+      name: ide
+  profile: dev
+  version: v1
+
+---
+
+apiVersion: cube.io/v1alpha1
+kind: DeploymentConfig
+metadata:
+  generation: 1
+  name: ide
+  namespace: hidevopsio
+spec:
+  container:
+    ports:
+      - containerPort: 8443
+        name: http-8443
+        protocol: TCP
+  dockerRegistry: null
+  envType:
+    - remoteDeploy
+    - deploy
+  profile: dev
+  readinessProbe:
+    exec:
+      command:
+        - curl
+        - --silent
+        - --show-error
+        - --fail
+        - http://localhost:8443
+    failureThreshold: 3
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+status:
+  lastVersion: 1
+
+---
+
+apiVersion: cube.io/v1alpha1
+kind: DeploymentConfig
+metadata:
+  generation: 1
+  name: sonar
+  namespace: hidevopsio
+spec:
+  container:
+    ports:
+      - containerPort: 8080
+        name: http-8080
+        protocol: TCP
+  dockerRegistry: null
+  envType:
+    - remoteDeploy
+    - deploy
+  profile: dev
+  readinessProbe:
+    exec:
+      command:
+        - curl
+        - --silent
+        - --show-error
+        - --fail
+        - http://localhost:8080/actuator/health
+    failureThreshold: 3
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    successThreshold: 1
+    timeoutSeconds: 1
+status:
+  lastVersion: 1
+
+
+---
+
+apiVersion: cube.io/v1alpha1
+kind: ServiceConfig
+metadata:
+  clusterName: ""
+  creationTimestamp: 2020-02-20T10:39:04Z
+  generation: 1
+  name: ide
+  namespace: hidevopsio
+spec:
+  ports:
+    - name: http-8443
+      port: 8443
+      protocol: TCP
+      targetPort: 8443
+  selector: null
+  type: NodePort
+
+---
+
+apiVersion: cube.io/v1alpha1
+kind: ServiceConfig
+metadata:
+  clusterName: ""
+  creationTimestamp: 2020-02-20T11:01:48Z
+  generation: 1
+  name: sonar
+  namespace: hidevopsio
+spec:
+  ports:
+    - name: http-8080
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector: null
+  type: NodePort
+
+---
+apiVersion: cube.io/v1alpha1
+kind: GatewayConfig
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.frontend.rule.type: PathPrefix
+    traefik.ingress.kubernetes.io/rewrite-target: /${namespace}/${name}
+  generation: 1
+  name: go-path
+  namespace: hidevopsio
+spec:
+  eventType: null
+  hosts:
+    - dev.apps.cloud2go.cn
+  httpIfTerminated: false
+  httpsOnly: false
+  kongAdminUrl: null
+  port: 8080
+  preserveHost: true
+  profile: null
+  retries: "5"
+  stripUri: true
+  upstreamConnectTimeout: 60000
+  upstreamReadTimeout: 60000
+  upstreamSendTimeout: 60000
+  upstreamUrl: ""
+  uris: null
+status:
+  metadata: {}
+---
+apiVersion: cube.io/v1alpha1
+kind: GatewayConfig
+metadata:
+  generation: 1
+  name: ide
+  namespace: hidevopsio
+spec:
+  hosts:
+    - dev.apps.cloud2go.cn
+  httpIfTerminated: false
+  httpsOnly: false
+  kongAdminUrl: null
+  port: 8443
+  preserveHost: true
+  profile: null
+  retries: "5"
+  stripUri: true
+  upstreamConnectTimeout: 60000
+  upstreamReadTimeout: 60000
+  upstreamSendTimeout: 60000
+  upstreamUrl: ""
+  uris: null
+
+---
+
+apiVersion: cube.io/v1alpha1
+kind: GatewayConfig
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.frontend.rule.type: PathPrefixStrip
+    traefik.ingress.kubernetes.io/rewrite-target: /
+  name: ide-path
+  namespace: hidevopsio
+spec:
+  hosts:
+    - dev.apps.cloud2go.cn
+  httpIfTerminated: false
+  httpsOnly: false
+  kongAdminUrl: null
+  port: 8443
+  preserveHost: true
+  profile: null
+  retries: "5"
+  stripUri: true
+  upstreamConnectTimeout: 60000
+  upstreamReadTimeout: 60000
+  upstreamSendTimeout: 60000
+  upstreamUrl: ""
+  uris: null
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "11"
+  creationTimestamp: 2020-02-20T10:25:48Z
+  generation: 11
+  labels:
+    app: script-agent
+    app.kubernetes.io/name: script-agent
+    version: v1
+  name: script-agent
+  namespace: hidevopsio
+spec:
+  progressDeadlineSeconds: 2147483647
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: script-agent
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/name: script-agent
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: script-agent
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/name: script-agent
+    spec:
+      containers:
+        - env:
+            - name: AMQP_HOST
+              value: 10.10.14.2
+            - name: AMQP_PASSWORD
+              value: hKFsDIsTOrwjMbZ
+            - name: MYSQL_HOST
+              value: 10.10.14.2
+            - name: COMPOSER_AGENT_URL
+              value: http://10.10.14.2:7002
+            - name: CLOUDOS_LOG_TAGS_FOR_ES_XXX_original_svcname
+              value: script-agent
+            - name: MYSQL_PASSWORD
+              value: ozNkRPMhX8HKFw2WfNi9uBkiF6T0vGi99PlHk8Y0IH/xPdJL88xjcU65UF7G2V//QJgOMrOM++cq56HULkuFu4ambhTYDaLFrAkz9+GNJT4ge6S5N1JQOGbd2YHyfRn0RV+7gN8LrPF8R6WOK/dl34HXOvACIGicSKZLk1tu00o=
+            - name: CUBE_HOST
+              value: http://manager:8080
+            - name: URL_IMAGE
+              value: harbor.cloud2go.cn/cloudos-dev/script-executor:RC4.26.0
+            - name: ORCHORADDLABELS
+              value: std
+            - name: FACTORY_URL
+              value: http://10.10.14.2:8003
+            - name: CLOUDOS_LOG_TAGS_FOR_ES_XXX_deploy_type
+              value: app
+            - name: APP_PROFILES_ACTIVE
+              value: env
+            - name: AMQP_USER
+              value: cloudtogo
+            - name: INFRA
+              value: 10.10.14.2
+            - name: USER_URL
+              value: http://10.10.14.2:8001
+            - name: CLOUDOS_LOG_TAGS_FOR_ES_XXX_project_name
+              value: script-agent
+            - name: SCRIPT_URL
+              value: 10.10.14.7:30124
+            - name: MAVEN_REPO_URL
+              value: http://maven.aliyun.com/nexus/content/groups/public/
+          image: registry.local/cloudos-dev/script-agent:RC4.22.46
+          imagePullPolicy: IfNotPresent
+          name: bp-scriptagent2
+          ports:
+            - containerPort: 8080
+              name: http-8080
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "8"
+  creationTimestamp: 2020-03-20T14:24:48Z
+  generation: 8
+  labels:
+    app: sonar-agent
+  name: sonar-agent
+  namespace: hidevopsio
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: sonar-agent
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sonar-agent
+    spec:
+      containers:
+        - env:
+            - name: AMQP_HOST
+              value: 10.10.14.2
+            - name: AMQP_PASSWORD
+              value: hKFsDIsTOrwjMbZ
+            - name: MYSQL_HOST
+              value: 10.10.14.2
+            - name: COMPOSER_AGENT_URL
+              value: http://10.10.14.2:7002
+            - name: MYSQL_PASSWORD
+              value: ozNkRPMhX8HKFw2WfNi9uBkiF6T0vGi99PlHk8Y0IH/xPdJL88xjcU65UF7G2V//QJgOMrOM++cq56HULkuFu4ambhTYDaLFrAkz9+GNJT4ge6S5N1JQOGbd2YHyfRn0RV+7gN8LrPF8R6WOK/dl34HXOvACIGicSKZLk1tu00o=
+            - name: CUBE_HOST
+              value: http://manager:8080
+            - name: URL_IMAGE
+              value: registry.local/cloudos-dev/sonarqube:RC4.27.1
+            - name: ORCHORADDLABELS
+              value: std
+            - name: SONARQUBE_HOST
+              value: 10.10.13.888456
+            - name: SONARQUBE_LOGIN
+              value: eb11bf25f561572d69f516be61c1d859d703e34e
+            - name: FACTORY_URL
+              value: http://${infra}:8003
+            - name: APP_PROFILES_ACTIVE
+              value: env
+            - name: AMQP_USER
+              value: cloudtogo
+            - name: INFRA
+              value: ${INFRA}
+            - name: USER_URL
+              value: http://${INFRA}:8001
+            - name: SCRIPT_URL
+              value: ${SONAR-AGENT}
+            - name: MAVEN_REPO_URL
+              value: http://maven.aliyun.com/nexus/content/groups/public/
+          image: registry.local/cloudos-dev/sonar-agent:RC4.27.2
+          imagePullPolicy: IfNotPresent
+          name: sonar-agent
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+
+---
