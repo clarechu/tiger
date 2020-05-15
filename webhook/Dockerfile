@@ -4,7 +4,7 @@ EXPOSE 8080
 
 ENV APP_ROOT=/opt/app-root \
     APP_BIN=/opt/app-root/bin \
-    PATH=${APP_BIN}:$PATH \
+    PATH=${APP_BIN}:$PATH:$APP_ROOT \
     TZ='Asia/Shanghai'
 
 RUN  mkdir -p ${APP_BIN} ${APP_ROOT} \
