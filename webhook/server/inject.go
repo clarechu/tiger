@@ -115,11 +115,11 @@ func (wh *WebhookServer) Inject(resp http.ResponseWriter, req *http.Request) {
 		http.Error(resp, "invalid Content-Type, want `application/json`", http.StatusUnsupportedMediaType)
 		return
 	}
-	err := wh.defaultBuild()
+/*	err := wh.DefaultBuild()
 	if err != nil {
 		http.Error(resp, "invalid Content-Type, want `application/json`", http.StatusUnsupportedMediaType)
 		return
-	}
+	}*/
 	wh.SidecarTemplateVersion = sidecarTemplateVersionHash(wh.Config.Template)
 	var reviewResponse *v1beta1.AdmissionResponse
 	ar := v1beta1.AdmissionReview{}
@@ -155,18 +155,20 @@ func sidecarTemplateVersionHash(in string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func (wh *WebhookServer) defaultBuild() (err error) {
+func (wh *WebhookServer) DefaultBuild() (err error) {
 	clientSet, err := client.GetDefaultK8sClientSet()
 	if err != nil {
 		log.Infof("get client set err:%v", err)
 		return err
 	}
 	configmap := istio.NewConfigMap(clientSet)
+	//configmap get meshConfig
 	meshConfig, err := configmap.GetMeshConfigFromConfigMap("kube-inject")
 	if err != nil {
 		log.Infof("get client set err:%v", err)
 		return
 	}
+	//configmap get valueConfig
 	valueConfig, err := configmap.GetValuesFromConfigMap()
 	if err != nil {
 		log.Infof("get valueConfig err:%v", err)

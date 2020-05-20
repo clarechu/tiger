@@ -6,5 +6,5 @@ import (
 
 func TestWebhookServer_Inject(t *testing.T) {
 	wh := &WebhookServer{}
-	wh.defaultBuild()
+	wh.DefaultBuild()
 }

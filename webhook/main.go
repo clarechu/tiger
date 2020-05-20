@@ -36,7 +36,6 @@ func main() {
 		if err != nil {
 			glog.Errorf("Failed to load configuration: %v", err)
 		}*/
-
 	pair, err := tls.LoadX509KeyPair(parameters.certFile, parameters.keyFile)
 	if err != nil {
 		log.Errorf("Failed to load key pair: %v", err)
@@ -50,6 +49,12 @@ func main() {
 			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
 		},
 		ClientSet: clientSet,
+
+	}
+	err = wh.DefaultBuild()
+	if err != nil {
+		log.Errorf("Failed to load default value pair: %v", err)
+		return
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/mutate", wh.Inject)

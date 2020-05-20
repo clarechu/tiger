@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: sidecar-injector
-          image: harbor.cloud2go.cn/istio/sidecar-injector:0.0.17
+          image: harbor.cloud2go.cn/istio/sidecar-injector:0.0.18
           imagePullPolicy: IfNotPresent
           args:
 #            - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
