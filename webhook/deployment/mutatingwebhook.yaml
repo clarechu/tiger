@@ -1,0 +1,19 @@
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: sidecar-injector-webhook-cfg
+  labels:
+    app: sidecar-injector
+webhooks:
+  - name: sidecar-injector.istio.io
+    clientConfig:
+      service:
+        name: sidecar-injector
+        namespace: istio-system
+        path: "/mutate"
+      caBundle: ${CABundle}
+    rules:
+      - operations: ["CREATE", "UPDATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
