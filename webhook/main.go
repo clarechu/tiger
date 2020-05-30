@@ -24,7 +24,7 @@ type WhSvrParameters struct {
 
 func main() {
 	clientSet, err := client.GetDefaultK8sClientSet()
-	log.Infof("api version :%v", "0.0.10")
+	log.Infof("api version :%v", "0.0.11")
 	var parameters WhSvrParameters
 	// get command line parameters
 	flag.IntVar(&parameters.port, "port", 443, "Webhook server port.")
@@ -62,7 +62,7 @@ func main() {
 	// start webhook server in new rountine
 	go func() {
 		log.Infof("server started :%v", parameters.port)
-		if err := wh.Server.ListenAndServeTLS(parameters.certFile, parameters.keyFile); err != nil {
+		if err := wh.Server.ListenAndServeTLS("", ""); err != nil {
 			log.Errorf("Failed to listen and serve webhook server: %v", err)
 		}
 	}()
