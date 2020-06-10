@@ -1,6 +1,7 @@
 package istio
 
 import (
+	"context"
 	"fmt"
 	"github.com/hashicorp/go-multierror"
 	"gopkg.in/yaml.v2"
@@ -37,7 +38,7 @@ func (c *ConfigMap) GetMeshConfigFromConfigMap(name string, injectConfigMapNames
 	if len(injectConfigMapNames) != 0 {
 		meshConfigMapName = injectConfigMapNames[0]
 	}
-	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(meshConfigMapName, metav1.GetOptions{})
+	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(context.TODO(), meshConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("could not read valid configmap %q from namespace %q: %v - "+
 			"Use --meshConfigFile or re-run "+name+" with `-i <istioSystemNamespace> and ensure valid MeshConfig exists",
@@ -64,7 +65,7 @@ func (c *ConfigMap) GetInjectConfigFromConfigMap(injectConfigMapNames ...string)
 	if len(injectConfigMapNames) != 0 {
 		injectConfigMapName = injectConfigMapNames[0]
 	}
-	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(injectConfigMapName, metav1.GetOptions{})
+	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(context.TODO(), injectConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("could not find valid configmap %q from namespace  %q: %v - "+
 			"Use --injectConfigFile or re-run kube-inject with `-i <istioSystemNamespace> and ensure istio-sidecar-injector configmap exists",
@@ -92,7 +93,7 @@ func (c *ConfigMap) GetValuesFromConfigMap(injectConfigMapNames ...string) (valu
 	if len(injectConfigMapNames) != 0 {
 		injectConfigMapName = injectConfigMapNames[0]
 	}
-	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(injectConfigMapName, metav1.GetOptions{})
+	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(context.TODO(), injectConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		return "", fmt.Errorf("could not find valid configmap %q from namespace  %q: %v - "+
 			"Use --valuesFile or re-run kube-inject with `-i <istioSystemNamespace> and ensure istio-sidecar-injector configmap exists",
@@ -113,7 +114,7 @@ func (c *ConfigMap) GetInjectConfig(injectConfigMapNames ...string) (sidecarTemp
 	if len(injectConfigMapNames) != 0 {
 		injectConfigMapName = injectConfigMapNames[0]
 	}
-	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(injectConfigMapName, metav1.GetOptions{})
+	meshConfigMap, err := c.client.CoreV1().ConfigMaps(istioNamespace).Get(context.TODO(), injectConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("could not find valid configmap %q from namespace  %q: %v - "+
 			"Use --injectConfigFile or re-run kube-inject with `-i <istioSystemNamespace> and ensure istio-sidecar-injector configmap exists",

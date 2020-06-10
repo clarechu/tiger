@@ -1,12 +1,14 @@
 package istio
 
 import (
+	"context"
 	"github.com/google/martian/log"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	meshconfig "istio.io/api/mesh/v1alpha1"
 	"istio.io/istio/pkg/config/mesh"
 	istio_inject "istio.io/istio/pkg/kube/inject"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -37,23 +39,23 @@ func New(clientSet *kubernetes.Clientset) *Inject {
 
 //Auto  edit namespace
 func (i *Inject) AutoInject(name string) error {
-	namespace, err := i.clientSet.CoreV1().Namespaces().Get(name, v1.GetOptions{})
+	namespace, err := i.clientSet.CoreV1().Namespaces().Get(context.TODO(), name, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
 	namespace.Labels["istio-injection"] = "enable"
-	_, err = i.clientSet.CoreV1().Namespaces().Update(namespace)
+	_, err = i.clientSet.CoreV1().Namespaces().Update(context.TODO(), namespace, meta_v1.UpdateOptions{})
 	return err
 }
 
 //Auto  edit namespace
 func (i *Inject) DeleteInject(name string) error {
-	namespace, err := i.clientSet.CoreV1().Namespaces().Get(name, v1.GetOptions{})
+	namespace, err := i.clientSet.CoreV1().Namespaces().Get(context.TODO(), name, v1.GetOptions{})
 	if err != nil {
 		return err
 	}
 	delete(namespace.Labels, "istio-injection")
-	_, err = i.clientSet.CoreV1().Namespaces().Update(namespace)
+	_, err = i.clientSet.CoreV1().Namespaces().Update(context.TODO(), namespace, meta_v1.UpdateOptions{})
 	return err
 }
 
@@ -73,6 +75,7 @@ func (i *Inject) Manual(obj runtime.Object) (out interface{}, err error) {
 	}
 	return istio_inject.IntoObject(sidecarTemplate,
 		valueConfig,
+		"",
 		meshConfig,
 		obj)
 }
@@ -92,6 +95,7 @@ func (i *Inject) ManualFile(obj runtime.Object, injectConfigFile, meshconfigFile
 	}
 	return istio_inject.IntoObject(sidecarTemplate,
 		valueConfig,
+		"",
 		meshConfig,
 		obj)
 }
