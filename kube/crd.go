@@ -76,7 +76,7 @@ func (c *Resource) Update(resource *CustomResourceDefinition) (crd *v1beta1.Cust
 			},
 		},
 	}
-	crd, err = c.clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Update(crd)
+	crd, err = c.clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Update(context.TODO(), crd, meta_v1.UpdateOptions{})
 	if api_err.IsAlreadyExists(err) {
 		return crd, nil
 	}
