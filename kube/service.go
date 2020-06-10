@@ -26,8 +26,8 @@ func (c *Service) Delete(namespace, name string) (err error) {
 	return
 }
 
-func (c *Service) Update(namespace string, service *v1.Service) (err error) {
-	service, err = c.clientSet.CoreV1().Services(namespace).Update(context.TODO(), service, meta_v1.UpdateOptions{})
+func (c *Service) Update(namespace string, service *v1.Service) (svc *v1.Service, err error) {
+	svc, err = c.clientSet.CoreV1().Services(namespace).Update(context.TODO(), service, meta_v1.UpdateOptions{})
 	return
 }
 

@@ -20,9 +20,20 @@ require (
 	istio.io/api v0.0.0-20200609235057-2f6a9b136356
 	istio.io/client-go v0.0.0-20200610000813-8e1d4bd9cbca
 	istio.io/istio v0.0.0-20200610054140-4489e711b34a
-	istio.io/pkg v0.0.0-20200606170016-70c5172b9cdf
+	istio.io/pkg v0.0.0-20200511212725-7bfbbf968c23
 	k8s.io/api v0.18.3
 	k8s.io/apiextensions-apiserver v0.18.3
 	k8s.io/apimachinery v0.18.3
 	k8s.io/client-go v0.18.3
+)
+
+replace (
+	istio.io/api => istio.io/api v0.0.0-20200529165953-72dad51d4ffc
+	istio.io/istio => github.com/istio/istio v0.0.0-20200609030148-aa3826a8b2d0
+	istio.io/pkg => istio.io/pkg v0.0.0-20200511212725-7bfbbf968c23
+	k8s.io/api => k8s.io/api v0.18.0
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.0
+	k8s.io/apimachinery => k8s.io/apimachinery v0.18.1
+	k8s.io/client-go => k8s.io/client-go v0.18.0
+
 )

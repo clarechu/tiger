@@ -21,7 +21,7 @@ func (c *Deployment) Create(namespace string, deployment *v1.Deployment) (err er
 }
 
 func (c *Deployment) Delete(name, namespace string) (err error) {
-	ops := &meta_v1.DeleteOptions{}
+	ops := meta_v1.DeleteOptions{}
 	err = c.clientSet.AppsV1().Deployments(namespace).Delete(context.TODO(), name, ops)
 	return
 }
