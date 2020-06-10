@@ -1,6 +1,7 @@
 package kube
 
 import (
+	"context"
 	v1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextension "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	api_err "k8s.io/apimachinery/pkg/api/errors"
@@ -40,7 +41,7 @@ func (c *Resource) Create(resource *CustomResourceDefinition) (crd *v1beta1.Cust
 			},
 		},
 	}
-	crd, err = c.clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Create(crd)
+	crd, err = c.clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Create(context.TODO(), crd, meta_v1.CreateOptions{})
 	if api_err.IsAlreadyExists(err) {
 		return crd, nil
 	}
@@ -49,13 +50,13 @@ func (c *Resource) Create(resource *CustomResourceDefinition) (crd *v1beta1.Cust
 
 func (c *Resource) Get(name string) (crd *v1beta1.CustomResourceDefinition, err error) {
 	ops := meta_v1.GetOptions{}
-	crd, err = c.clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Get(name, ops)
+	crd, err = c.clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Get(context.TODO(), name, ops)
 	return
 }
 
 func (c *Resource) Delete(name string) (err error) {
-	ops := &meta_v1.DeleteOptions{}
-	err = c.clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(name, ops)
+	ops := meta_v1.DeleteOptions{}
+	err = c.clientSet.ApiextensionsV1beta1().CustomResourceDefinitions().Delete(context.TODO(), name, ops)
 	if api_err.IsAlreadyExists(err) {
 		return nil
 	}
