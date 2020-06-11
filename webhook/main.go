@@ -6,6 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ClareChu/tiger/kube/client"
+	"github.com/ClareChu/tiger/webhook/cache"
+	"github.com/ClareChu/tiger/webhook/pkg"
 	"github.com/ClareChu/tiger/webhook/server"
 	"istio.io/pkg/log"
 	"net/http"
@@ -41,7 +43,7 @@ func main() {
 		log.Errorf("Failed to load key pair: %v", err)
 		return
 	}
-
+	go Running()
 	wh := &server.WebhookServer{
 		//SidecarConfig: sidecarConfig,
 		Server: &http.Server{
@@ -74,3 +76,19 @@ func main() {
 	log.Infof("Got OS shutdown signal, shutting down webhook server gracefully...")
 	err = wh.Server.Shutdown(context.Background())
 }
+
+
+func Running()  {
+	conf, err := cache.NewConfig()
+	if err != nil {
+		log.Errorf("cache get error :%v", err)
+		return
+	}
+	cache.Set(conf)
+	i := &pkg.Inject{}
+	http.HandleFunc("/inject/deployment", i.IntoResourceFile)
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Errorf("ListenAndServe 8080 error: %v", err)
+	}
+	log.Infof("server started :%v", 8080)}

@@ -278,8 +278,8 @@ func (wh *WebhookServer) inject(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionR
 		deployMeta,
 		&pod.Spec,
 		&pod.ObjectMeta,
-		wh.MeshConfig.DefaultConfig,
-		wh.MeshConfig) // nolint: lll
+		wh.MeshConfig,
+		"") // nolint: lll
 	if err != nil {
 		return toAdmissionResponse(err)
 	}
@@ -376,7 +376,7 @@ func createPatch(pod *corev1.Pod,
 
 	canonicalSvc, canonicalRev := extractCanonicalServiceLabels(pod.Labels, workloadName)
 	patch = append(patch, addLabels(pod.Labels, map[string]string{
-		model.TLSModeLabelName:                       model.IstioMutualTLSModeLabel,
+		//model.TLSModeLabelName:                       model.IstioMutualTLSModeLabel,
 		model.IstioCanonicalServiceLabelName:         canonicalSvc,
 		model.IstioCanonicalServiceRevisionLabelName: canonicalRev})...)
 
