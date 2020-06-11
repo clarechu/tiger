@@ -82,11 +82,6 @@ func (i Inject) ManualInject(context string, obj runtime.Object) (updates interf
 	} else if valuesConfig, err = getValuesFromConfigMap(context); err != nil {
 		return nil, err
 	}
-	/*	buf := new(bytes.Buffer)
-		err = yaml.NewEncoder(buf).Encode(obj)
-		if err != nil {
-			return nil, err
-		}*/
 	return IntoResourceFile(sidecarTemplate, valuesConfig, meshConfig, obj)
 }
 
