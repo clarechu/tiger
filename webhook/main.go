@@ -51,7 +51,6 @@ func main() {
 			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
 		},
 		ClientSet: clientSet,
-
 	}
 	err = wh.DefaultBuild()
 	if err != nil {
@@ -77,8 +76,7 @@ func main() {
 	err = wh.Server.Shutdown(context.Background())
 }
 
-
-func Running()  {
+func Running() {
 	conf, err := cache.NewConfig()
 	if err != nil {
 		log.Errorf("cache get error :%v", err)
@@ -87,8 +85,10 @@ func Running()  {
 	cache.Set(conf)
 	i := &pkg.Inject{}
 	http.HandleFunc("/inject/deployment", i.IntoResourceFile)
+	http.HandleFunc("/uninject/deployment", i.IntoResourceFile)
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Errorf("ListenAndServe 8080 error: %v", err)
 	}
-	log.Infof("server started :%v", 8080)}
+	log.Infof("server started :%v", 8080)
+}
