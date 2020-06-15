@@ -3,17 +3,16 @@ package pkg
 import (
 	"context"
 	"encoding/json"
-	"github.com/ClareChu/tiger/webhook/cache"
+	"fmt"
+	"github.com/ClareChu/tiger/kube/client"
 	"io/ioutil"
 	"istio.io/pkg/log"
 	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"net/http"
 )
 
 type Request struct {
-	Context   string `json:"context"`
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
 }
@@ -47,14 +46,14 @@ func (i *Inject) IntoResourceFile(resp http.ResponseWriter, req *http.Request) {
 	}
 	r := Request{}
 	err := json.Unmarshal(body, &r)
-	restConfig := cache.Get().Clusters[r.Context].KubeConfig
-	clientSet, err := kubernetes.NewForConfig(restConfig)
+	clientSet, err := client.GetDefaultK8sClientSet()
 	if err != nil {
-		http.Error(resp, "get client set err", http.StatusUnsupportedMediaType)
+		log.Infof("get client set err:%v", err)
+		http.Error(resp, fmt.Sprintf("get client set err:%v", err), http.StatusUnsupportedMediaType)
 		return
 	}
 	deployment, err := clientSet.AppsV1().Deployments(r.Namespace).Get(context.TODO(), r.Name, metav1.GetOptions{})
-	updates, err := i.ManualInject(r.Context, deployment)
+	updates, err := i.ManualInject(clientSet, deployment)
 	if err != nil {
 		http.Error(resp, "get updates", http.StatusUnsupportedMediaType)
 		return
