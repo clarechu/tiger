@@ -29,6 +29,8 @@ spec:
               readOnly: true
 #            - name: webhook-config
 #              mountPath: /etc/webhook/config
+      serviceAccount: istiod-service-account
+      serviceAccountName: istiod-service-account
       volumes:
         - name: webhook-certs
           secret:
