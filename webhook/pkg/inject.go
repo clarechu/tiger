@@ -2,9 +2,7 @@ package pkg
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/ClareChu/tiger/webhook/cache"
 	"github.com/hashicorp/go-multierror"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -20,6 +18,7 @@ import (
 
 //Inject In order to take advantage of all of Istio’s features, pods in the mesh must be running an Istio sidecar proxy.
 type Inject struct {
+	ClientSet        *kubernetes.Clientset
 	MeshConfigFile   string
 	InjectConfigFile string
 	ValuesFile       string
@@ -45,14 +44,14 @@ const (
 
 //todo Manual operation  inject
 // istioctl kube-inject -f samples/sleep/sleep.yaml | kubectl apply -f -
-func (i Inject) ManualInject(clientSet *kubernetes.Clientset, obj runtime.Object) (updates interface{}, err error) {
+func (i Inject) ManualInject(obj runtime.Object) (updates interface{}, err error) {
 	var meshConfig *meshconfig.MeshConfig
 	if i.MeshConfigFile != "" {
 		if meshConfig, err = mesh.ReadMeshConfig(i.MeshConfigFile); err != nil {
 			return nil, err
 		}
 	} else {
-		if meshConfig, err = getMeshConfigFromConfigMap(clientSet, "kube-inject"); err != nil {
+		if meshConfig, err = getMeshConfigFromConfigMap(i.ClientSet, "kube-inject"); err != nil {
 			return nil, err
 		}
 	}
@@ -68,7 +67,7 @@ func (i Inject) ManualInject(clientSet *kubernetes.Clientset, obj runtime.Object
 			return nil, multierror.Append(err, fmt.Errorf("loading --injectConfigFile"))
 		}
 		sidecarTemplate = injectConfig.Template
-	} else if sidecarTemplate, err = getInjectConfigFromConfigMap(clientSet); err != nil {
+	} else if sidecarTemplate, err = getInjectConfigFromConfigMap(i.ClientSet); err != nil {
 		return nil, err
 	}
 
@@ -79,7 +78,7 @@ func (i Inject) ManualInject(clientSet *kubernetes.Clientset, obj runtime.Object
 			return nil, err
 		}
 		valuesConfig = string(valuesConfigBytes)
-	} else if valuesConfig, err = getValuesFromConfigMap(clientSet); err != nil {
+	} else if valuesConfig, err = getValuesFromConfigMap(i.ClientSet); err != nil {
 		return nil, err
 	}
 	return IntoResourceFile(sidecarTemplate, valuesConfig, meshConfig, obj)
@@ -155,14 +154,6 @@ func getValuesFromConfigMap(clientSet *kubernetes.Clientset) (string, error) {
 	}
 
 	return valuesData, nil
-}
-
-func createInterface(context string) (kubernetes.Interface, error) {
-	cluster := cache.Get().Clusters[context]
-	if cluster == nil {
-		return nil, errors.New("context not found")
-	}
-	return kubernetes.NewForConfig(cluster.KubeConfig)
 }
 
 //todo deployment set labels
