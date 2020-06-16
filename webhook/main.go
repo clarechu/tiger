@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ClareChu/tiger/kube/client"
-	"github.com/ClareChu/tiger/webhook/cache"
 	"github.com/ClareChu/tiger/webhook/pkg"
 	"github.com/ClareChu/tiger/webhook/server"
 	"istio.io/pkg/log"
@@ -77,15 +76,19 @@ func main() {
 }
 
 func Running() {
-	conf, err := cache.NewConfig()
+	clientSet, err := client.GetDefaultK8sClientSet()
 	if err != nil {
-		log.Errorf("cache get error :%v", err)
+		log.Errorf("get default client set err:%v", err)
 		return
 	}
-	cache.Set(conf)
-	i := &pkg.Inject{}
-	http.HandleFunc("/inject/deployment", i.IntoResourceFile)
-	http.HandleFunc("/uninject/deployment", i.IntoResourceFile)
+	i := &pkg.Inject{
+		ClientSet: clientSet,
+	}
+	un := &pkg.Uninject{
+		ClientSet: clientSet,
+	}
+	http.HandleFunc("/inject/deployment", i.Start)
+	http.HandleFunc("/uninject/deployment", un.Start)
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Errorf("ListenAndServe 8080 error: %v", err)

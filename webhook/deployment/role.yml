@@ -4,7 +4,7 @@ metadata:
   name: sidecar-inject
 rules:
   - apiGroups: ["extensions", "apps"] # "" indicates the core API group
-    resources: ["deployments"]
+    resources: ["deployments", "replicasets"]
     verbs: ["get", "watch", "list", "update"]
   - apiGroups: [""] # "" indicates the core API group
     resources: ["configmaps"]
