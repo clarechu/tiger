@@ -23,63 +23,97 @@ type Uninject struct {
 //Copy that ReplicaSet's template back to the Deployment's template
 //The rollback logic currently lives in Deployment controller code, which still uses extensions/v1beta1 Deployment client:
 func (un *Uninject) rollback(name, namespace string) (err error) {
-	list, err := un.ClientSet.AppsV1().ReplicaSets(namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("app=%s", name),
-	})
-	if err != nil {
-		klog.Errorf("get replicasets error:%v", err)
-		return
-	}
-	deployment, err := un.ClientSet.AppsV1().Deployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	deployments, err := un.ClientSet.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", name)})
 	if err != nil {
 		klog.Errorf("get deployment error:%v", err)
 		return
 	}
-	_, err = un.rollbackToTemplate(deployment, list.Items)
+
+	for _, deployment := range deployments.Items {
+		list, err := un.ClientSet.AppsV1().ReplicaSets(namespace).List(context.TODO(), metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("app=%s,version=%s", name, deployment.Labels["version"]),
+		})
+		if err != nil {
+			klog.Errorf("get replicasets error:%v", err)
+			return err
+		}
+		_, err = un.rollbackToTemplate(&deployment, list.Items)
+	}
 	return err
 }
 
-/*
-// rollback the deployment to the specified revision. In any case cleanup the rollback spec.
-func (dc *DeploymentController) rollback(d *extensions.Deployment, rsList []*extensions.ReplicaSet, podMap map[types.UID]*v1.PodList) error {
-	newRS, allOldRSs, err := dc.getAllReplicaSetsAndSyncRevision(d, rsList, podMap, true)
+func (un *Uninject) unInjectDeployment(name, namespace string) (err error) {
+	klog.Errorf("unInject deployment name:%v, namespace:%v", name, namespace)
+	deployments, err := un.ClientSet.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("app=%s", name)})
 	if err != nil {
-		return err
+		klog.Errorf("get deployment error:%v", err)
+		return
 	}
-
-	allRSs := append(allOldRSs, newRS)
-	toRevision := &d.Spec.RollbackTo.Revision
-	// If rollback revision is 0, rollback to the last revision
-	if *toRevision == 0 {
-		if *toRevision = deploymentutil.LastRevision(allRSs); *toRevision == 0 {
-			// If we still can't find the last revision, gives up rollback
-			dc.emitRollbackWarningEvent(d, deploymentutil.RollbackRevisionNotFound, "Unable to find last revision.")
-			// Gives up rollback
-			return dc.updateDeploymentAndClearRollbackTo(d)
-		}
-	}
-	for _, rs := range allRSs {
-		v, err := deploymentutil.Revision(rs)
+	for _, deployment := range deployments.Items {
+		_, err = un.rollbackDeployment(&deployment)
 		if err != nil {
-			glog.V(4).Infof("Unable to extract revision from deployment's replica set %q: %v", rs.Name, err)
-			continue
-		}
-		if v == *toRevision {
-			glog.V(4).Infof("Found replica set %q with desired revision %d", rs.Name, v)
-			// rollback by copying podTemplate.Spec from the replica set
-			// revision number will be incremented during the next getAllReplicaSetsAndSyncRevision call
-			// no-op if the spec matches current deployment's podTemplate.Spec
-			performedRollback, err := dc.rollbackToTemplate(d, rs)
-			if performedRollback && err == nil {
-				dc.emitRollbackNormalEvent(d, fmt.Sprintf("Rolled back deployment %q to revision %d", d.Name, *toRevision))
-			}
+			klog.Errorf("rollback deployment error:%v", err)
 			return err
 		}
 	}
-	dc.emitRollbackWarningEvent(d, deploymentutil.RollbackRevisionNotFound, "Unable to find the revision to rollback to.")
-	// Gives up rollback
-	return dc.updateDeploymentAndClearRollbackTo(d)
-}*/
+	return err
+}
+
+func (un *Uninject) rollbackDeployment(d *v1.Deployment) (bool, error) {
+	d.Spec.Template.Annotations = nil
+	// delete Containers
+	for index, container := range d.Spec.Template.Spec.Containers {
+		if container.Name == "istio-proxy" {
+			d.Spec.Template.Spec.Containers = append(
+				d.Spec.Template.Spec.Containers[:index],
+				d.Spec.Template.Spec.Containers[index+1:]...)
+		}
+	}
+	// delete initContainers
+	for index, container := range d.Spec.Template.Spec.InitContainers {
+		if container.Name == "istio-init" {
+			d.Spec.Template.Spec.InitContainers = append(
+				d.Spec.Template.Spec.InitContainers[:index],
+				d.Spec.Template.Spec.InitContainers[index+1:]...)
+		}
+	}
+	// delete volume
+	for index, volume := range d.Spec.Template.Spec.Volumes {
+		if volume.Name == "istio-envoy" {
+			d.Spec.Template.Spec.Volumes = append(
+				d.Spec.Template.Spec.Volumes[:index],
+				d.Spec.Template.Spec.Volumes[index+1:]...)
+		}
+	}
+	for index, volume := range d.Spec.Template.Spec.Volumes {
+		if volume.Name == "istio-data" {
+			d.Spec.Template.Spec.Volumes = append(
+				d.Spec.Template.Spec.Volumes[:index],
+				d.Spec.Template.Spec.Volumes[index+1:]...)
+		}
+	}
+	for index, volume := range d.Spec.Template.Spec.Volumes {
+
+		if volume.Name == "istio-podinfo" {
+			d.Spec.Template.Spec.Volumes = append(
+				d.Spec.Template.Spec.Volumes[:index],
+				d.Spec.Template.Spec.Volumes[index+1:]...)
+		}
+	}
+	for index, volume := range d.Spec.Template.Spec.Volumes {
+
+		if volume.Name == "istiod-ca-cert" {
+			d.Spec.Template.Spec.Volumes = append(
+				d.Spec.Template.Spec.Volumes[:index],
+				d.Spec.Template.Spec.Volumes[index+1:]...)
+		}
+	}
+	d.Spec.Template.Spec.DNSConfig = nil
+	d.Spec.Template.Spec.SecurityContext = nil
+	return true, un.updateDeploymentAndClearRollbackTo(d)
+}
 
 // rollbackToTemplate compares the templates of the provided deployment and replica set and
 // updates the deployment with the replica set template in case they are different. It also

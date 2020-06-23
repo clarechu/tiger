@@ -15,7 +15,7 @@ func TestIntoResourceFile(t *testing.T) {
 	deployment, err := clientSet.AppsV1().Deployments("default").Get(context.TODO(), "helloworld", metav1.GetOptions{})
 	assert.Equal(t, nil, err)
 	inject := Inject{}
-	values, err := inject.ManualInject(clientSet, deployment)
+	values, err := inject.ManualInject(deployment)
 	assert.Equal(t, nil, err)
 	fmt.Println(values)
 }

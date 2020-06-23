@@ -12,5 +12,5 @@ func TestAutoInject(t *testing.T) {
 	uninject := &Uninject{
 		ClientSet: clientSet,
 	}
-	err = uninject.rollback("frontend-service", "default")
+	err = uninject.unInjectDeployment("tcp-echo", "istio-io-tcp-traffic-shifting")
 }
