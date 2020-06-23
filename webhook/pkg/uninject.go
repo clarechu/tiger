@@ -61,6 +61,21 @@ func (un *Uninject) unInjectDeployment(name, namespace string) (err error) {
 	return err
 }
 
+func (un *Uninject) unInjectDeploymentName(name, namespace string) (err error) {
+	klog.Errorf("unInject deployment name:%v, namespace:%v", name, namespace)
+	deployment, err := un.ClientSet.AppsV1().Deployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("get deployment error:%v", err)
+		return
+	}
+	_, err = un.rollbackDeployment(deployment)
+	if err != nil {
+		klog.Errorf("rollback deployment error:%v", err)
+		return err
+	}
+	return err
+}
+
 func (un *Uninject) rollbackDeployment(d *v1.Deployment) (bool, error) {
 	d.Spec.Template.Annotations = nil
 	// delete Containers

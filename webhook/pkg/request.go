@@ -98,7 +98,7 @@ func (un *Uninject) Start(resp http.ResponseWriter, req *http.Request) {
 		http.Error(resp, fmt.Sprintf("unmarshal json error:%v", err), http.StatusUnsupportedMediaType)
 		return
 	}
-	err = un.unInjectDeployment(r.Name, r.Namespace)
+	err = un.unInjectDeploymentName(r.Name, r.Namespace)
 	if err != nil {
 		http.Error(resp, fmt.Sprintf("update deployment is error:%v", err), http.StatusUnsupportedMediaType)
 		return
