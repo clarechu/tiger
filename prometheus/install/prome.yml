@@ -1,0 +1,137 @@
+# Source: prometheus-operator/templates/prometheus.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  namespace: prometheus-operator
+spec:
+  image: "harbor.cloud2go.cn/istio/prometheus:v2.17.2"
+  version: v2.17.2
+  # 存在内存的时间
+  retention: 2h
+  scrapeInterval: 15s
+  serviceAccountName: prometheus
+  secrets:
+    - istio.prometheus
+  enableAdminAPI: true
+  alerting:
+    alertmanagers:
+      - name: alertmanager-main
+        namespace: prometheus-operator
+        port: web
+#  remoteWrite:
+#    - url: http://<vm insert ip>:8480/insert/1/prometheus
+#      queueConfig:
+#        capacity: 20000
+#        maxSamplesPerSend: 10000
+#        maxShards: 30
+#        minShards: 30
+  serviceMonitorNamespaceSelector: {}
+  serviceMonitorSelector: {}
+  podMetadata:
+    labels:
+      app: prometheus
+    annotations:
+      sidecar.istio.io/inject: "true"
+  resources:
+    requests:
+      memory: 5Gi
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  ruleSelector:
+    matchLabels:
+      prometheus: k8s
+      role: alert-rules
+#  volumes:
+#    - name: prometheus-secret
+#      secret:
+#        secretName: prometheus-secret
+#  volumeMounts:
+#    - mountPath: /etc/prometheus/secrets/istio.prometheus
+#      name: prometheus-secret
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-istio-prometheus
+  labels:
+    app: prometheus
+rules:
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - services
+      - endpoints
+      - pods
+      - nodes/proxy
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-istio-prometheus
+  labels:
+    app: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-istio-prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: prometheus-operator
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: prometheus
+  namespace: prometheus-operator
+spec:
+  host: prometheus.istio-system.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: prometheus-operator
+  annotations:
+    prometheus.io/scrape: 'true'
+  labels:
+    app: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - name: http-prometheus
+      protocol: TCP
+      port: 9090
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: prometheus-operator
+  labels:
+    app: prometheus
+
+
+
+

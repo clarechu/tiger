@@ -25,6 +25,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.18.3
 	k8s.io/apimachinery v0.18.3
 	k8s.io/client-go v0.18.3
+	k8s.io/klog v1.0.0
 )
 
 replace (
@@ -35,5 +36,4 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.18.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.18.1
 	k8s.io/client-go => k8s.io/client-go v0.18.0
-
 )
