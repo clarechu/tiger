@@ -15,16 +15,44 @@ See the License for the specific language governing permissions and
 
 package leet_code
 
-/*
-https://leetcode-cn.com/problems/two-sum
-*/
-func twoSum(nums []int, target int) []int {
-	for i, n := range nums {
-		for j, m := range nums {
-			if n + m == target && i != j {
-				return []int{i, j}
-			}
-		}
-	}
-	return nil
+
+type Stack struct {
+	V    []int
+	Size int
 }
+
+func NewStack() *Stack {
+	return &Stack{
+		V: make([]int, 0),
+	}
+}
+
+func (s *Stack) push(i int) {
+	s.V = append(s.V, i)
+	s.Size++
+}
+
+func (s *Stack) pop() int {
+	if s.Size == 0 {
+		panic("not ")
+	}
+	s.Size--
+	a := s.V[s.Size]
+	c := s.Size - 1
+	s.V = s.V[:c]
+	return a
+}
+
+func (s *Stack) same(a int) {
+	if s.Size == 0 {
+		s.push(a)
+		return
+	}
+	b := s.Size - 1
+	if s.V[b] == a {
+		s.pop()
+	} else {
+		s.push(a)
+	}
+}
+
