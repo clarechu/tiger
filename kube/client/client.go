@@ -18,16 +18,11 @@ type Client interface {
 	GetApiExtensionClientSet(kConfig string) (clientSet *apiextension.Clientset, err error)
 }
 
-func GetDefaultK8sClientSet() (clientset *kubernetes.Clientset, err error) {
+func GetDefaultK8sClientSet() (clientSet *kubernetes.Clientset, err error) {
 	var config *rest.Config
 	if os.Getenv("KUBERNETES_SERVICE_HOST") == "" {
-		var kubeConfig *string
-		if home := homedir.HomeDir(); home != "" {
-			kubeConfig = flag.String("kubeConfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeConfig file")
-		} else {
-			kubeConfig = flag.String("kubeConfig", "", "absolute path to the kubeConfig file")
-		}
-		config, err = clientcmd.BuildConfigFromFlags("", *kubeConfig)
+		kubeConfig := GetKubeConfig()
+		config, err = clientcmd.BuildConfigFromFlags("", kubeConfig)
 		if err != nil {
 			return
 		}
@@ -37,8 +32,7 @@ func GetDefaultK8sClientSet() (clientset *kubernetes.Clientset, err error) {
 			return
 		}
 	}
-
-	clientset, err = kubernetes.NewForConfig(config)
+	clientSet, err = kubernetes.NewForConfig(config)
 	return
 }
 
@@ -80,5 +74,15 @@ func GetApiExtensionClientSet(kConfig string) (clientSet *apiextension.Clientset
 		return
 	}
 	clientSet, err = apiextension.NewForConfig(config)
+	return
+}
+
+//GetKubeConfig
+func GetKubeConfig() (kubeConfig string) {
+	if home := homedir.HomeDir(); home != "" {
+		kubeConfig = filepath.Join(home, ".kube", "config")
+	} else {
+		kubeConfig = os.Getenv("KUBECONFIG")
+	}
 	return
 }

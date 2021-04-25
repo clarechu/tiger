@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ClareChu/tiger/kube/client"
+	"github.com/ClareChu/tiger/webhook/pkg"
 	"github.com/ClareChu/tiger/webhook/server"
 	"istio.io/pkg/log"
 	"net/http"
@@ -41,7 +42,7 @@ func main() {
 		log.Errorf("Failed to load key pair: %v", err)
 		return
 	}
-
+	go Running()
 	wh := &server.WebhookServer{
 		//SidecarConfig: sidecarConfig,
 		Server: &http.Server{
@@ -49,7 +50,6 @@ func main() {
 			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
 		},
 		ClientSet: clientSet,
-
 	}
 	err = wh.DefaultBuild()
 	if err != nil {
@@ -73,4 +73,25 @@ func main() {
 
 	log.Infof("Got OS shutdown signal, shutting down webhook server gracefully...")
 	err = wh.Server.Shutdown(context.Background())
+}
+
+func Running() {
+	clientSet, err := client.GetDefaultK8sClientSet()
+	if err != nil {
+		log.Errorf("get default client set err:%v", err)
+		return
+	}
+	i := &pkg.Inject{
+		ClientSet: clientSet,
+	}
+	un := &pkg.Uninject{
+		ClientSet: clientSet,
+	}
+	http.HandleFunc("/inject/deployment", i.Start)
+	http.HandleFunc("/uninject/deployment", un.Start)
+	err = http.ListenAndServe(":8080", nil)
+	if err != nil {
+		log.Errorf("ListenAndServe 8080 error: %v", err)
+	}
+	log.Infof("server started :%v", 8080)
 }

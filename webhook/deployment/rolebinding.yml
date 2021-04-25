@@ -1,13 +1,12 @@
-kind: RoleBinding
+kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: default
-  namespace: istio-system
+  name: sidecar-inject
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: sidecar-inject-service-account
     namespace: istio-system
 roleRef:
-  kind: Role
-  name: default
+  kind: ClusterRole
+  name: sidecar-inject
   apiGroup: rbac.authorization.k8s.io

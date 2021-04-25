@@ -3,6 +3,10 @@ kind: IstioOperator
 spec:
   hub: harbor.cloud2go.cn/istio
   addonComponents:
+    prometheus:
+      enabled: false
+    prometheusOperator:
+      enabled: true
     istiocoredns:
       enabled: true
     kiali:
@@ -18,7 +22,6 @@ spec:
       # Provides dns resolution for global services
       podDNSSearchNamespaces:
         - global
-        - cluster02
       multiCluster:
         enabled: true
       controlPlaneSecurityEnabled: true
@@ -29,8 +32,14 @@ spec:
           ISTIO_META_REQUESTED_NETWORK_VIEW: "external"
     kiali:
       createDemoSecret: true
-#      hub: harbor.cloud2go.cn/istio
-#    prometheus:
-#      hub: harbor.cloud2go.cn/istio
-#    istiocoredns:
-#      hub: harbor.cloud2go.cn/istio
+      hub: harbor.cloud2go.cn/istio
+    istiocoredns:
+      coreDNSImage: harbor.cloud2go.cn/istio/coredns
+      coreDNSPluginImage: harbor.cloud2go.cn/istio/coredns-plugin:0.2-istio-1.1
+    prometheusOperator:
+      createPrometheusResource: true
+    prometheus:
+      hub: harbor.cloud2go.cn/istio
+      security:
+        enabled: false
+      provisionPrometheusCert: false

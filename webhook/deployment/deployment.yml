@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: sidecar-injector
-          image: harbor.cloud2go.cn/istio/sidecar-injector:0.0.18
+          image: ${baseImage}/istio/sidecar-injector:0.0.20
           imagePullPolicy: IfNotPresent
           args:
 #            - -sidecarCfgFile=/etc/webhook/config/sidecarconfig.yaml
@@ -29,6 +29,8 @@ spec:
               readOnly: true
 #            - name: webhook-config
 #              mountPath: /etc/webhook/config
+      serviceAccount: sidecar-inject-service-account
+      serviceAccountName: sidecar-inject-service-account
       volumes:
         - name: webhook-certs
           secret:
