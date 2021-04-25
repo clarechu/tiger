@@ -15,16 +15,29 @@ See the License for the specific language governing permissions and
 
 package leet_code
 
-/*
-https://leetcode-cn.com/problems/two-sum
-*/
-func twoSum(nums []int, target int) []int {
-	for i, n := range nums {
-		for j, m := range nums {
-			if n + m == target && i != j {
-				return []int{i, j}
-			}
-		}
+type Queue struct {
+	tasks []int
+}
+
+func NewQueue() *Queue {
+	return &Queue{
+		tasks: make([]int, 0),
 	}
-	return nil
+}
+
+func (q *Queue) push(a int) {
+	q.tasks = append(q.tasks, a)
+}
+
+func (q *Queue) pop() int {
+	if q.size() == 0 {
+		return 0
+	}
+	var task int
+	task, q.tasks = q.tasks[0], q.tasks[1:]
+	return task
+}
+
+func (q *Queue) size() int {
+	return len(q.tasks)
 }
