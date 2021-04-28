@@ -16,24 +16,24 @@ See the License for the specific language governing permissions and
 package leet_code
 
 type Queue struct {
-	tasks []int
+	tasks []interface{}
 }
 
 func NewQueue() *Queue {
 	return &Queue{
-		tasks: make([]int, 0),
+		tasks: make([]interface{}, 0),
 	}
 }
 
-func (q *Queue) push(a int) {
+func (q *Queue) push(a interface{}) {
 	q.tasks = append(q.tasks, a)
 }
 
-func (q *Queue) pop() int {
+func (q *Queue) pop() interface{} {
 	if q.size() == 0 {
-		return 0
+		return nil
 	}
-	var task int
+	var task interface{}
 	task, q.tasks = q.tasks[0], q.tasks[1:]
 	return task
 }

@@ -15,43 +15,14 @@ See the License for the specific language governing permissions and
 
 package leet_code
 
-
-type Stack struct {
-	V    []int
-	Size int
+/**
+ * TreeNode
+ * Definition for a binary tree node.
+ */
+type TreeNode struct {
+	Val   int
+	Left  *TreeNode
+	Right *TreeNode
 }
 
-func NewStack() *Stack {
-	return &Stack{
-		V: make([]int, 0),
-	}
-}
-
-func (s *Stack) push(i int) {
-	s.V = append(s.V, i)
-	s.Size++
-}
-
-func (s *Stack) pop() int {
-	if s.Size == 0 {
-		panic("not ")
-	}
-	s.Size--
-	a := s.V[s.Size]
-	s.V = s.V[:s.Size]
-	return a
-}
-
-func (s *Stack) same(a int) {
-	if s.Size == 0 {
-		s.push(a)
-		return
-	}
-	b := s.Size - 1
-	if s.V[b] == a {
-		s.pop()
-	} else {
-		s.push(a)
-	}
-}
 
