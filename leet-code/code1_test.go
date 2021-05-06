@@ -319,14 +319,13 @@ func Test3(t *testing.T) {
 				Val: 4,
 				Right: &TreeNode{
 					Val: 5,
-
 				},
 				Left: &TreeNode{
-					Val:   3,
+					Val: 3,
 				},
 			},
 			Left: &TreeNode{
-				Val:   0,
+				Val: 0,
 			},
 		},
 	}, &TreeNode{Val: 2}, &TreeNode{Val: 4}))
@@ -473,13 +472,13 @@ func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
 	for queue.size() != 0 {
 		a := queue.pop().(*TreeNode)
 		m := make(map[int]int, 0)
-		m[a.Val] =1
+		m[a.Val] = 1
 		if a.Left != nil {
-			m[a.Left.Val] =1
+			m[a.Left.Val] = 1
 			queue.push(a.Left)
 		}
 		if a.Right != nil {
-			m[a.Right.Val] =1
+			m[a.Right.Val] = 1
 			queue.push(a.Right)
 		}
 		_, ok := m[p.Val]
@@ -489,4 +488,35 @@ func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
 		}
 	}
 	return nil
+}
+
+func Test33(t *testing.T) {
+	isHappy(100)
+}
+
+func isHappy(n int) bool {
+	c := 0
+	if n < 10 {
+		c = n
+	}
+	a := make([]int, 0)
+	for n >= 10 {
+		a = append(a, n%10)
+		n = n / 10
+		if n < 10 {
+			a = append(a, n)
+		}
+	}
+	for _, cc := range a {
+		c = cc*cc + c
+	}
+	if c < 10 {
+		if c == 1 || c == 7 {
+			return true
+		} else {
+			return false
+		}
+	} else {
+		return isHappy(c)
+	}
 }
