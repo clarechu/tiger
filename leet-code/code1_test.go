@@ -520,3 +520,111 @@ func isHappy(n int) bool {
 		return isHappy(c)
 	}
 }
+
+func TestSumRootToLeaf(t *testing.T) {
+	root := &TreeNode{
+		Val: 1,
+		Left: &TreeNode{
+			Val: 0,
+			Left: &TreeNode{
+				Val: 0,
+			},
+			Right: &TreeNode{
+				Val: 1,
+			},
+		},
+		Right: &TreeNode{
+			Val: 1,
+			Left: &TreeNode{
+				Val: 0,
+			},
+			Right: &TreeNode{
+				Val: 1,
+			},
+		},
+	}
+	fmt.Println(sumRootToLeaf(root))
+}
+
+type X struct {
+	x []int
+}
+
+func sumRootToLeaf(root *TreeNode) int {
+	if root == nil {
+		return 0
+	}
+	xx := &X{}
+	sumRoot1(root, root.Val, xx)
+	sum := 0
+	for _, x := range xx.x {
+		sum = x + sum
+	}
+	return sum
+}
+
+func sumRoot1(root *TreeNode, n int, xx *X) {
+	if root.Right == nil && root.Left == nil {
+		xx.x = append(xx.x, n)
+	}
+	if root.Right != nil {
+		sumRoot1(root.Right, n<<1+root.Right.Val, xx)
+	}
+	if root.Left != nil {
+		sumRoot1(root.Left, n<<1+root.Left.Val, xx)
+	}
+}
+
+func TestTkthLargest(t *testing.T) {
+	root := &TreeNode{
+		Val: 5,
+		Left: &TreeNode{
+			Val: 3,
+			Left: &TreeNode{
+				Val: 2,
+				Left: &TreeNode{
+					Val: 1,
+				},
+			},
+			Right: &TreeNode{
+				Val: 4,
+			},
+		},
+		Right: &TreeNode{
+			Val: 6,
+		},
+	}
+	fmt.Println(kthLargest(root, 3))
+}
+
+type Result struct {
+	val int
+}
+
+func kthLargest(root *TreeNode, k int) int {
+	r := &Result{}
+	n = k
+	kt(root, r)
+	return r.val
+}
+
+var n int
+
+func kt(root *TreeNode, r *Result) {
+	if root.Right != nil {
+		kt(root.Right, r)
+	}
+	/*k--
+	if k == 1 {
+		r.val = root.Val
+	}*/
+	fmt.Println(root.Val)
+	n--
+	if n == 0 {
+		r.val = root.Val
+		return
+	}
+	if root.Left != nil {
+		kt(root.Left, r)
+	}
+}
