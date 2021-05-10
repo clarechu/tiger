@@ -15,24 +15,23 @@ See the License for the specific language governing permissions and
 
 package leet_code
 
-
 type Stack struct {
-	V    []int
+	V    []interface{}
 	Size int
 }
 
 func NewStack() *Stack {
 	return &Stack{
-		V: make([]int, 0),
+		V: make([]interface{}, 0),
 	}
 }
 
-func (s *Stack) push(i int) {
+func (s *Stack) push(i interface{}) {
 	s.V = append(s.V, i)
 	s.Size++
 }
 
-func (s *Stack) pop() int {
+func (s *Stack) pop() interface{} {
 	if s.Size == 0 {
 		panic("not ")
 	}
@@ -42,7 +41,7 @@ func (s *Stack) pop() int {
 	return a
 }
 
-func (s *Stack) same(a int) {
+func (s *Stack) same(a interface{}) {
 	if s.Size == 0 {
 		s.push(a)
 		return
@@ -54,4 +53,3 @@ func (s *Stack) same(a int) {
 		s.push(a)
 	}
 }
-

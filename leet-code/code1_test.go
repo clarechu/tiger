@@ -628,3 +628,232 @@ func kt(root *TreeNode, r *Result) {
 		kt(root.Left, r)
 	}
 }
+
+func TestLeafSimilar(t *testing.T) {
+	root1 := &TreeNode{
+		Val: 1,
+		Left: &TreeNode{
+			Val: 2,
+		},
+	}
+	root2 := &TreeNode{
+		Val: 2,
+		Left: &TreeNode{
+			Val: 2,
+		},
+	}
+	fmt.Println(leafSimilar(root1, root2))
+}
+
+func leafSimilar(root1 *TreeNode, root2 *TreeNode) bool {
+	list1 = make([]int, 0)
+	list2 = make([]int, 0)
+	dfs12(root1)
+	dfs13(root2)
+	return thesame(list1, list2)
+}
+
+func thesame(list1, list2 []int) bool {
+
+	if len(list1) != len(list2) {
+		return false
+	}
+	for i, l := range list1 {
+		if l != list2[i] {
+			return false
+		}
+	}
+	return true
+}
+
+var list1 []int
+var list2 []int
+
+func dfs12(root *TreeNode) {
+	if root.Left == nil && root.Right == nil {
+		list1 = append(list1, root.Val)
+	}
+	if root.Left != nil {
+		dfs12(root.Left)
+	}
+
+	if root.Right != nil {
+		dfs12(root.Right)
+	}
+}
+
+func dfs13(root *TreeNode) {
+	if root.Left == nil && root.Right == nil {
+		list2 = append(list2, root.Val)
+	}
+	if root.Left != nil {
+		dfs13(root.Left)
+	}
+
+	if root.Right != nil {
+		dfs13(root.Right)
+	}
+}
+
+func maxDepth12(root *Node) int {
+	if root == nil {
+		return 0
+	}
+	max := 0
+	queue := &Queue{}
+	queue.push(root)
+	for queue.size() != 0 {
+		max++
+		cur := &Queue{}
+		for queue.size() != 0 {
+			node := queue.pop().(*Node)
+			for _, c := range node.Children {
+				cur.push(c)
+			}
+		}
+		queue = cur
+	}
+	return max
+}
+
+func maxDepth13(root *Node) int {
+	if root == nil {
+		return 0
+	} else if len(root.Children) == 0 {
+		return 1
+	} else {
+		heights := make([]int, 0)
+		for _, r := range root.Children {
+			heights = append(heights, maxDepth13(r))
+		}
+		return maxSlice(heights) + 1
+	}
+
+}
+
+func maxSlice(heights []int) int {
+	max := 0
+	for _, h := range heights {
+		if h > max {
+			max = h
+		}
+	}
+	return max
+}
+
+var xx []int
+
+func preorder(root *Node) []int {
+	if root == nil {
+		return make([]int, 0)
+	}
+	xx = make([]int, 0)
+	preorder1(root)
+	return xx
+}
+
+func preorder1(root *Node) {
+	xx = append(xx, root.Val)
+	for _, r := range root.Children {
+		preorder1(r)
+	}
+}
+
+func postorder(root *Node) []int {
+	if root == nil {
+		return make([]int, 0)
+	}
+	stack := &Stack{}
+	x := make([]int, 0)
+	stack.push(root)
+	for stack.Size != 0 {
+		node := stack.pop().(*Node)
+		n := []int{node.Val}
+		x = append(n, x...)
+		for _, r := range node.Children {
+			stack.push(r)
+		}
+	}
+	return x
+}
+
+type RightTreeNode struct {
+	Right    bool
+	TreeNode *TreeNode
+}
+
+func sumOfLeftLeaves(root *TreeNode) int {
+	sum := 0
+	if root == nil {
+		return sum
+	}
+	queue := &Queue{}
+	tree := &RightTreeNode{
+		TreeNode: root,
+	}
+	queue.push(tree)
+	for queue.size() != 0 {
+		node := queue.pop().(*RightTreeNode)
+		if node.TreeNode.Left == nil && node.TreeNode.Right == nil {
+			if node.Right {
+				sum = sum + node.TreeNode.Val
+			}
+		}
+		if node.TreeNode.Left != nil {
+			node := &RightTreeNode{
+				Right:    true,
+				TreeNode: node.TreeNode.Left,
+			}
+			queue.push(node)
+		}
+		if node.TreeNode.Right != nil {
+			node := &RightTreeNode{
+
+				TreeNode: node.TreeNode.Right,
+			}
+			queue.push(node)
+		}
+	}
+	return sum
+}
+
+func mergeTrees(root1 *TreeNode, root2 *TreeNode) *TreeNode {
+	if root1 == nil && root2 == nil {
+		return nil
+	}
+	root := &TreeNode{}
+	merge2(root, root1, root2)
+	return root
+}
+
+func merge2(root *TreeNode, root1 *TreeNode, root2 *TreeNode) {
+	if root1 == nil {
+		root.Val = root2.Val
+		if root2.Left != nil {
+			root.Left = root2.Left
+		}
+		if root2.Right != nil {
+			root.Right = root2.Right
+		}
+	} else if root2 == nil {
+		root.Val = root1.Val
+		if root1.Left != nil {
+			root.Left = root1.Left
+		}
+		if root1.Right != nil {
+			root.Right = root1.Right
+		}
+	} else {
+		root.Val = root1.Val + root2.Val
+		if root1.Left != nil || root2.Left != nil {
+			left := &TreeNode{}
+			root.Left = left
+			merge2(left, root1.Left, root2.Left)
+		}
+		if root1.Right != nil || root2.Right != nil {
+			right := &TreeNode{}
+			root.Right = right
+			merge2(right, root1.Right, root2.Right)
+		}
+	}
+}
