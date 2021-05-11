@@ -1,12 +1,32 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"gopkg.in/confluentinc/confluent-kafka-go.v1/kafka"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"istio.io/pkg/log"
+	"time"
 )
+
+type tiger struct {
+	MysqlHost     string
+	KafkaHost     string
+	MysqlPassword string
+	MysqlUsername string
+}
+
+var ti *tiger
+
+func init() {
+	ti = &tiger{}
+	flag.StringVar(&ti.MysqlHost, "mysqlhost", "192.168.0.1", "mysql host 地址")
+	flag.StringVar(&ti.KafkaHost, "kafkahost", "192.168.0.2", "kafka host 地址")
+	flag.StringVar(&ti.MysqlPassword, "mysqlpassword", "root", "mysql password ")
+	flag.StringVar(&ti.MysqlUsername, "mysqlusername", "password", "mysql username ")
+	flag.Parse()
+}
 
 type Product struct {
 	gorm.Model
@@ -19,22 +39,21 @@ type Server struct {
 	consumer *kafka.Consumer
 }
 
-func NewServer() *Server {
+func NewServer(t *tiger) *Server {
 	return &Server{
-		db:       NewDBClient(),
-		consumer: NewMQClient(),
+		db:       NewDBClient(t),
+		consumer: NewMQClient(t),
 	}
 }
 
 func main() {
-	server := NewServer()
+	server := NewServer(ti)
 	for {
 		msg, err := server.consumer.ReadMessage(-1)
 		if err == nil {
 			fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
 			// 操作数据库
 			err = server.CreateProduct(msg.String())
-
 
 		} else {
 			// The client will automatically try to recover from all errors.
@@ -45,9 +64,9 @@ func main() {
 	server.consumer.Close()
 }
 
-func NewMQClient() *kafka.Consumer {
+func NewMQClient(t *tiger) *kafka.Consumer {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": "localhost",
+		"bootstrap.servers": t.KafkaHost,
 		"group.id":          "myGroup",
 		"auto.offset.reset": "earliest",
 	})
@@ -60,24 +79,29 @@ func NewMQClient() *kafka.Consumer {
 	return c
 }
 
-func NewDBClient() *gorm.DB {
+func NewDBClient(t *tiger) *gorm.DB {
 	db, err := gorm.Open(mysql.New(mysql.Config{
-		DSN:                       "gorm:gorm@tcp(127.0.0.1:3306)/gorm?charset=utf8&parseTime=True&loc=Local", // DSN data source name
-		DefaultStringSize:         256,                                                                        // string 类型字段的默认长度
-		DisableDatetimePrecision:  true,                                                                       // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
-		DontSupportRenameIndex:    true,                                                                       // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
-		DontSupportRenameColumn:   true,                                                                       // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
-		SkipInitializeWithVersion: false,                                                                      // 根据当前 MySQL 版本自动配置
+		DSN:                       fmt.Sprintf("%s:%s@tcp(%s:3306)/gorm?charset=utf8&parseTime=True&loc=Local", t.MysqlUsername, t.MysqlPassword, t.MysqlHost), // DSN data source name
+		DefaultStringSize:         256,                                                                                                                         // string 类型字段的默认长度
+		DisableDatetimePrecision:  true,                                                                                                                        // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
+		DontSupportRenameIndex:    true,                                                                                                                        // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
+		DontSupportRenameColumn:   true,                                                                                                                        // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
+		SkipInitializeWithVersion: false,                                                                                                                       // 根据当前 MySQL 版本自动配置
 	}), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 
-	// 迁移 schema
-	db.AutoMigrate(&Product{})
+	sqlDB, err := db.DB()
 
-	// Create
-	db.Create(&Product{Code: "D42", Price: 100})
+	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
+	sqlDB.SetMaxIdleConns(10)
+
+	// SetMaxOpenConns 设置打开数据库连接的最大数量。
+	sqlDB.SetMaxOpenConns(100)
+
+	// SetConnMaxLifetime 设置了连接可复用的最大时间。
+	sqlDB.SetConnMaxLifetime(time.Hour)
 	/*
 		// Read
 		var product Product
