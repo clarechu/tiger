@@ -18,6 +18,7 @@ package leet_code
 import (
 	"fmt"
 	"math"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -856,4 +857,152 @@ func merge2(root *TreeNode, root1 *TreeNode, root2 *TreeNode) {
 			merge2(right, root1.Right, root2.Right)
 		}
 	}
+}
+
+var as []float64
+
+func averageOfLevels(root *TreeNode) []float64 {
+	as = make([]float64, 0)
+	if root == nil {
+		return as
+	}
+	queue := NewQueue()
+	queue.push(root)
+	for queue.size() != 0 {
+		cur := NewQueue()
+		size := queue.size()
+		sum := 0
+		for queue.size() != 0 {
+			node := queue.pop().(*TreeNode)
+			sum = sum + node.Val
+			if node.Left != nil {
+				cur.push(node.Left)
+			}
+			if node.Right != nil {
+				cur.push(node.Right)
+			}
+		}
+		s := float64(sum) / float64(size)
+		as = append(as, s)
+		queue = cur
+	}
+	return as
+}
+
+var paths []string
+
+func binaryTreePaths(root *TreeNode) []string {
+	paths = make([]string, 0)
+	if root == nil {
+		return paths
+	}
+	if root.Left == nil && root.Right == nil {
+		paths = append(paths, fmt.Sprintf("%d", root.Val))
+	}
+	if root.Right != nil {
+		dfsPath(fmt.Sprintf("%d", root.Val), root.Right)
+	}
+
+	if root.Left != nil {
+		dfsPath(fmt.Sprintf("%d", root.Val), root.Left)
+	}
+
+	return paths
+}
+
+func dfsPath(path string, root *TreeNode) {
+	path = path + "->" + fmt.Sprintf("%d", root.Val)
+	if root.Left != nil {
+		dfsPath(path, root.Left)
+	}
+	if root.Right != nil {
+		dfsPath(path, root.Right)
+	}
+	if root.Left == nil && root.Right == nil {
+		paths = append(paths, path)
+	}
+}
+
+func TestFindMode(t *testing.T) {
+	root := &TreeNode{
+		Val: 1,
+		Right: &TreeNode{
+			Val: 2,
+			Left: &TreeNode{
+				Val: 2,
+			},
+		},
+	}
+	fmt.Println(findMode(root))
+}
+
+var k []int
+
+func findMode(root *TreeNode) []int {
+	k = make([]int, 0)
+	if root == nil {
+		return k
+	}
+	dfs33(root)
+	//最大个数
+	max := 0
+	//当前个数
+	j := 0
+	cur := 0
+	kk := make([]int, 0)
+	for _, i := range k {
+		if max == 0 {
+			kk = append(kk, i)
+			cur = i
+			j++
+			max++
+			continue
+		}
+		if cur == i {
+			j++
+		} else {
+			j = 1
+			cur = i
+		}
+		if max < j {
+			kk = []int{i}
+			max = j
+		} else if max == j {
+			kk = append(kk, i)
+		}
+	}
+	return kk
+}
+
+func dfs33(root *TreeNode) {
+	if root.Left != nil {
+		dfs33(root.Left)
+	}
+	k = append(k, root.Val)
+	if root.Right != nil {
+		dfs33(root.Right)
+	}
+}
+
+func isAnagram(s string, t string) bool {
+	ss := []byte(s)
+	tt := []byte(t)
+	sort.Slice(ss, func(i, j int) bool {
+		if ss[i] < ss[j] {
+			return true
+		}
+		return false
+	})
+
+	sort.Slice(tt, func(i, j int) bool {
+		if tt[i] < tt[j] {
+			return true
+		}
+		return false
+	})
+	return string(ss) == string(tt)
+}
+
+func TestIsAnagxram(t *testing.T)  {
+	fmt.Println(isAnagram("anagram","nagaram"))
 }
