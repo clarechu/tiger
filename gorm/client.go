@@ -60,8 +60,8 @@ func main() {
 			fmt.Printf("Consumer error: %v (%v)\n", err, msg)
 		}
 	}
+	log.Fatal(server.consumer.Close().Error())
 
-	server.consumer.Close()
 }
 
 func NewMQClient(t *tiger) *kafka.Consumer {
