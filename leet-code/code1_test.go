@@ -1003,6 +1003,53 @@ func isAnagram(s string, t string) bool {
 	return string(ss) == string(tt)
 }
 
-func TestIsAnagxram(t *testing.T)  {
-	fmt.Println(isAnagram("anagram","nagaram"))
+func TestIsAnagxram(t *testing.T) {
+	fmt.Println(isAnagram("anagram", "nagaram"))
+}
+
+func TestLongestPalindrome(t *testing.T) {
+	fmt.Println(longestPalindrome("raedvmtyxveocfyhluuozodpxlroyjcsfslqmjthsbxhteeinpmnejxxcsyjgugclkehagpemfrnqtrkiropblcqdboztxtsaxqnsktrhzelynbzkxcghhfntrdauyzhzgujhniazijshesigzckgxentepeohcltpydumougjkmgoscchqsryaiamoujnyfpcsbwqtwikedbsjxxtnrpfgeqymwfngixslwlifimdapgzanuqwhwpesaigeoiwoyxzjmxukbsvsjvnjhwdbqzuurfolcngefdpsewrpvwivrsjnttrewkytdvvguatidyemrswpdmeqjrxgfdmcdlrcgiqdkyaaykdqigcrldcmdfgxrjqemdpwsrmeyditaugvvdtykwerttnjsrviwvprwespdfegnclofruuzqbdwhjnvjsvsbkuxmjzxyowioegiasepwhwqunazgpadmifilwlsxignfwmyqegfprntxxjsbdekiwtqwbscpfynjuomaiayrsqhccsogmkjguomudyptlchoepetnexgkczgisehsjizainhjugzhzyuadrtnfhhgcxkzbnylezhrtksnqxastxtzobdqclbporikrtqnrfmepgaheklcgugjyscxxjenmpnieethxbshtjmqlsfscjyorlxpdozouulhyfcoevxytmvdear"))
+}
+
+func longestPalindrome(s string) string {
+	ss := []byte(s)
+	len := len(ss)
+	if len < 2 {
+		return s
+	}
+	max := 1
+	begin := 0
+	kk := make([][]bool, len)
+	for jj := range ss {
+		kk[jj][jj] = true
+	}
+	for l := 2; l <= len; l++ {
+		for jj := 0; jj < len; jj++ {
+			jjj := jj + l - 1
+			if jjj >= len {
+				break
+			}
+
+			if ss[jjj] != ss[jj] {
+				kk[jj][jjj] = false
+			} else {
+				if jjj-jj <= 2 {
+					kk[jj][jjj] = true
+				} else {
+					kk[jj][jjj] = kk[jj+1][jjj-1]
+				}
+			}
+			//
+			if jjj-jj+1 >= max && kk[jj][jjj] {
+				max = jjj - jj + 1
+				begin = jj
+			}
+		}
+	}
+	return string(ss[begin : max+begin])
+}
+
+func TestTrap(t *testing.T) {
+//fmt.Println(trap([]int{4,2,3}))
+	fmt.Println(minPathSum([][]int{{1,3,1},{1,5,1},{4,2,1},{7,6,1}}))
 }

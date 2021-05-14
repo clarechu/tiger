@@ -8,6 +8,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"istio.io/pkg/log"
+	"net"
 	"time"
 )
 
@@ -65,6 +66,7 @@ func main() {
 		}
 	}
 	server.sqlDB.Close()
+	net.Dial("", ":8080")
 	log.Fatal(server.consumer.Close().Error())
 
 }
