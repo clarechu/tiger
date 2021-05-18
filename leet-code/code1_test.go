@@ -1050,6 +1050,216 @@ func longestPalindrome(s string) string {
 }
 
 func TestTrap(t *testing.T) {
-//fmt.Println(trap([]int{4,2,3}))
-	fmt.Println(minPathSum([][]int{{1,3,1},{1,5,1},{4,2,1},{7,6,1}}))
+	//fmt.Println(trap([]int{4,2,3}))
+	fmt.Println(waysToStep(61))
+}
+func waysToStep(n int) int {
+	if n <= 2 {
+		return n
+	}
+	dp := make([]int, n)
+	dp[0] = 1
+	dp[1] = 2
+	dp[2] = 4
+	for i := 3; i < n; i++ {
+		dp[i] = dp[i-1]%1000000007 + dp[i-2]%1000000007 + dp[i-3]%1000000007
+		dp[i] = dp[i] % 1000000007
+	}
+	return dp[n-1]
+}
+
+func TestConstructor(t *testing.T) {
+	fmt.Println(numDecodings("226"))
+}
+
+func numDecodings(s string) int {
+	ss := []byte(s)
+	if len(ss) == 1 {
+		return 1
+	}
+	max := 0
+	for i := 0; i < len(ss)-1; i++ {
+		n := ss[i] - 48
+		if n == 0 {
+			continue
+		}
+		m := ss[i+1] - 48
+		if m == 0 {
+			max = max - 1
+		}
+		if n*10+m <= 26 {
+			max = max + 2
+		} else {
+			max += 1
+		}
+	}
+	return max
+}
+
+func TestWordBreak(t *testing.T) {
+	fmt.Println(wordBreak("cars", []string{"car", "ca", "rs"}))
+}
+
+func wordBreak(s string, wordDict []string) bool {
+	n := make([]string, 0)
+	n = append(n, s)
+	sort.Slice(wordDict, func(i, j int) bool {
+		if len([]byte(wordDict[i])) < len([]byte(wordDict[j])) {
+			return true
+		}
+		return false
+	})
+	for len(n) != 0 {
+		for _, nn := range n {
+			flag := false
+			cur := make([]string, 0)
+			for _, w := range wordDict {
+				if strings.Contains(nn, w) {
+					flag = true
+					a := strings.Split(nn, w)
+					for _, aa := range a {
+						if aa != "" {
+							cur = append(cur, aa)
+						}
+					}
+					break
+				}
+			}
+			if !flag {
+				return false
+			}
+			n = cur
+		}
+
+	}
+
+	return true
+}
+
+func TestNumArray_SumRange(t *testing.T) {
+	fmt.Println(removeElement([]int{1, 1, 2}, 1))
+}
+
+func removeDuplicates(nums []int) int {
+	for i := 1; i < len(nums); i++ {
+		if nums[i] == nums[i-1] {
+			nums = append(nums[:i-1], nums[i:]...)
+			i--
+			continue
+		}
+	}
+	return len(nums)
+}
+
+func removeElement(nums []int, val int) int {
+	for i := 0; i < len(nums); i++ {
+		if nums[i] == val {
+			nums = append(nums[:i], nums[i+1:]...)
+			i--
+			continue
+		}
+	}
+	return len(nums)
+}
+
+func searchInsert(nums []int, target int) int {
+	for i := 0; i < len(nums); i++ {
+		if nums[i] >= target {
+			return i
+		}
+	}
+	return len(nums)
+}
+func plusOne(digits []int) []int {
+	for i := len(digits) - 1; i >= 0; i-- {
+		n := digits[i] + 1
+		if n == 10 {
+			digits[i] = 0
+			if i == 0 {
+				digits = append([]int{1}, digits...)
+				return digits
+			}
+		} else {
+			digits[i] = n
+			return digits
+		}
+	}
+	return digits
+}
+
+var i []string
+
+func readBinaryWatch(turnedOn int) []string {
+	if turnedOn == 0 {
+		return make([]string, 0)
+	}
+	i = make([]string, 0)
+	read(turnedOn, 0, 0, 0, 1)
+	return i
+}
+
+func read(turnedOn, h int, m int, cur int, begin int) {
+	if h > 11 || m > 59 {
+		return
+	}
+	if turnedOn == cur {
+		mm := ""
+		if m == 0 {
+			mm = "00"
+		} else if m < 10 {
+			mm = fmt.Sprintf("0%d", m)
+		} else {
+			mm = fmt.Sprintf("%d", m)
+		}
+		i = append(i, fmt.Sprintf("%d:%s", h, mm))
+		return
+	}
+	ma := map[int]int{
+		1:  1,
+		2:  2,
+		3:  4,
+		4:  8,
+		5:  1,
+		6:  2,
+		7:  4,
+		8:  8,
+		9:  16,
+		10: 32,
+	}
+	for i := begin; i <= 10; i++ {
+		if i <= 4 {
+			read(turnedOn, h+ma[i], m, cur+1, i+1)
+		} else {
+			read(turnedOn, h, m+ma[i], cur+1, i+1)
+		}
+	}
+}
+
+func TestReadBinaryWatch(t *testing.T) {
+	fmt.Println(numberOfMatches(7))
+}
+
+/*
+https://leetcode-cn.com/problems/count-of-matches-in-tournament/
+*/
+func numberOfMatches(n int) int {
+	if n == 1 {
+		return 0
+	}
+	c := make([]int, 0)
+	i := 0
+	for n >= 2 {
+		if i == 0 {
+			c = append(c,  n/2)
+		} else {
+			c = append(c, c[i-1] + n/2)
+		}
+		i++
+		if n%2 != 0 {
+			n = n/2 + 1
+		} else {
+			n = n / 2
+		}
+	}
+	return c[len(c)-1]
 }
