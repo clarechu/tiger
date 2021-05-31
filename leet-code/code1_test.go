@@ -302,8 +302,13 @@ func Test3(t *testing.T) {
 			},
 		},
 	}))
-
-	fmt.Printf("%+v", lowestCommonAncestor(&TreeNode{
+	fmt.Printf("%+v", lowestCommonAncestor(&TreeNode{Val: 1,
+		Left: &TreeNode{
+			Val: 2,
+		}, Right: &TreeNode{
+			Val: 3,
+		}}, &TreeNode{Val: 2}, &TreeNode{Val: 3}))
+	/*	fmt.Printf("%+v", lowestCommonAncestor(&TreeNode{
 		Val: 6,
 		Right: &TreeNode{
 			Val: 8,
@@ -329,7 +334,7 @@ func Test3(t *testing.T) {
 				Val: 0,
 			},
 		},
-	}, &TreeNode{Val: 2}, &TreeNode{Val: 4}))
+	}, &TreeNode{Val: 2}, &TreeNode{Val: 4}))*/
 }
 
 /*
@@ -462,33 +467,6 @@ func invert(root *TreeNode, p *TreeNode) {
 		p.Left = &TreeNode{}
 		invert(root.Right, p.Left)
 	}
-}
-
-func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
-	if root == nil {
-		return nil
-	}
-	queue := NewQueue()
-	queue.push(root)
-	for queue.size() != 0 {
-		a := queue.pop().(*TreeNode)
-		m := make(map[int]int, 0)
-		m[a.Val] = 1
-		if a.Left != nil {
-			m[a.Left.Val] = 1
-			queue.push(a.Left)
-		}
-		if a.Right != nil {
-			m[a.Right.Val] = 1
-			queue.push(a.Right)
-		}
-		_, ok := m[p.Val]
-		_, ok2 := m[q.Val]
-		if ok && ok2 {
-			return a
-		}
-	}
-	return nil
 }
 
 func Test33(t *testing.T) {
@@ -1250,9 +1228,9 @@ func numberOfMatches(n int) int {
 	i := 0
 	for n >= 2 {
 		if i == 0 {
-			c = append(c,  n/2)
+			c = append(c, n/2)
 		} else {
-			c = append(c, c[i-1] + n/2)
+			c = append(c, c[i-1]+n/2)
 		}
 		i++
 		if n%2 != 0 {
@@ -1262,4 +1240,262 @@ func numberOfMatches(n int) int {
 		}
 	}
 	return c[len(c)-1]
+}
+
+func TestSubsetXORSum(t *testing.T) {
+	fmt.Println(subsetXORSum([]int{3, 4, 5, 6, 7, 8}))
+	letterCombinations("6")
+}
+
+func subsetXORSum(nums []int) int {
+	if len(nums) == 0 {
+		return 0
+	}
+	n := 2
+	nu := make([]int, 0)
+	nu = append(nu, nums...)
+	for len(nums)+1 > n {
+		num2 = make([]int, 0)
+		sub(nums, 0, 0, 1, n)
+		nu = append(nu, num2...)
+		n++
+	}
+	nn := 0
+	for _, i := range nu {
+		nn += i
+	}
+	return nn
+}
+
+var num2 []int
+
+func sub(cur []int, begin, c, n, q int) {
+	for j := begin; j < len(cur); j++ {
+		b := c ^ cur[j]
+		if n == q {
+			num2 = append(num2, b)
+		} else {
+			sub(cur, j+1, b, n+1, q)
+		}
+	}
+}
+
+var m12 = map[byte][]string{
+	'2': {"a", "b", "c"},
+	'3': {"d", "e", "f"},
+	'4': {"g", "h", "i"},
+	'5': {"j", "k", "l"},
+	'6': {"m", "n", "o"},
+	'7': {"p", "q", "r", "s"},
+	'8': {"t", "u", "v"},
+	'9': {"w", "x", "y", "z"},
+}
+
+func letterCombinations(digits string) []string {
+	if digits == "" {
+		return []string{}
+	}
+	cc = make([]string, 0)
+	b := []byte(digits)
+	letter(b, 0, "")
+	return cc
+}
+
+var cc []string
+
+func letter(b []byte, n int, cur string) {
+	if len(b) == n {
+		cc = append(cc, cur)
+		return
+	}
+	mm := m12[b[n]]
+	for i := 0; i < len(mm); i++ {
+		cc := cur + mm[i]
+		letter(b, n+1, cc)
+	}
+}
+
+var combinationSums [][]int
+
+func combinationSum(candidates []int, target int) [][]int {
+	combinationSums = make([][]int, 0)
+	sums(candidates, make([]int, 0), target, 0, 0)
+	return combinationSums
+}
+
+func sums(candidates, cur []int, target, sum, i int) {
+	if sum == target {
+		combinationSums = append(combinationSums, append([]int(nil), cur...))
+		return
+	}
+	if sum > target {
+		return
+	}
+	for j := i; j < len(candidates); j++ {
+		dd := append(cur, candidates[j])
+		s := sum + candidates[j]
+		sums(candidates, dd, target, s, j)
+	}
+}
+
+func TestSubsetXORSum1(t *testing.T) {
+	fmt.Println(combinationSum([]int{2, 3, 5}, 8))
+}
+
+func permute(nums []int) [][]int {
+	combinationSums = make([][]int, 0)
+	sums1(nums, make([]int, 0))
+	return combinationSums
+}
+
+func sums1(candidates, cur []int) {
+	if len(candidates) == len(cur) {
+		combinationSums = append(combinationSums, append([]int(nil), cur...))
+	}
+	for j := 0; j < len(candidates); j++ {
+		flag := false
+		for _, c := range cur {
+			if c == candidates[j] {
+				flag = true
+			}
+		}
+		if !flag {
+			dd := append(cur, candidates[j])
+			sums1(candidates, dd)
+		}
+	}
+}
+
+type ListNode struct {
+	Val  int
+	Next *ListNode
+}
+
+var l *ListNode
+
+func TestConstructor2(t *testing.T) {
+	fmt.Printf("%+v", addTwoNumbers(&ListNode{
+		Val: 7,
+		Next: &ListNode{
+			Val: 2,
+			Next: &ListNode{
+				Val:  4,
+				Next: &ListNode{},
+			},
+		},
+	}, nil))
+}
+
+func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
+	l = nil
+	stack1 := NewStack()
+	for l1 != nil {
+		stack1.push(l1.Val)
+		l1 = l1.Next
+	}
+	stack2 := NewStack()
+	for l2 != nil {
+		stack2.push(l2.Val)
+		l2 = l2.Next
+	}
+	addStack(stack1, stack2, 0)
+	return l
+}
+
+func addStack(stack1, stack2 *Stack, i int) {
+	if stack1.Size > 0 && stack2.Size > 0 {
+		v1 := stack1.pop().(int)
+		v2 := stack2.pop().(int)
+		l = &ListNode{
+			Val:  (v1 + v2 + i) % 10,
+			Next: l,
+		}
+		if v1+v2+i >= 10 {
+			addStack(stack1, stack2, 1)
+		} else {
+			addStack(stack1, stack2, 0)
+		}
+	} else if stack1.Size > 0 {
+		v1 := stack1.pop().(int)
+		l = &ListNode{
+			Val:  (v1 + i) % 10,
+			Next: l,
+		}
+		if v1+i >= 10 {
+			addStack(stack1, stack2, 1)
+		} else {
+			addStack(stack1, stack2, 0)
+		}
+	} else if stack2.Size > 0 {
+		v2 := stack2.pop().(int) + i
+		l = &ListNode{
+			Val:  v2 % 10,
+			Next: l,
+		}
+		if v2 >= 10 {
+			addStack(stack1, stack2, 1)
+		} else {
+			addStack(stack1, stack2, 0)
+		}
+	} else if i != 0 {
+		l = &ListNode{
+			Val:  1,
+			Next: l,
+		}
+	}
+}
+
+func TestNewQueue(t *testing.T) {
+	fmt.Printf("%+v", lowestCommonAncestor(&TreeNode{
+		Val: 2,
+		Right: &TreeNode{
+			Val: 3,
+			Right: &TreeNode{
+				Val: 5,
+				Right: &TreeNode{
+					Val: 9,
+				},
+				Left: &TreeNode{
+					Val: 8,
+				},
+			},
+			Left: &TreeNode{
+				Val:   4,
+				Right: nil,
+				Left:  nil,
+			},
+		}}, &TreeNode{
+		Val: 9,
+	}, nil))
+}
+
+func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
+	parent := map[int]*TreeNode{}
+	dfs1111(root, parent)
+	visited := map[int]bool{}
+	for p != nil {
+		visited[p.Val] = true
+		p = parent[p.Val]
+	}
+	for q != nil {
+		if visited[q.Val] {
+			return q
+		}
+		q = parent[q.Val]
+	}
+	return nil
+}
+
+func dfs1111(r *TreeNode, parent map[int]*TreeNode) {
+	if r == nil {
+		return
+	}
+	if r.Left != nil {
+		parent[r.Left.Val] = r
+		dfs1111(r.Left, parent)
+	}
+	if r.Right != nil {
+		parent[r.Right.Val] = r
+		dfs1111(r.Right, parent)
+	}
 }
