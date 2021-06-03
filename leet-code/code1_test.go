@@ -1499,3 +1499,43 @@ func dfs1111(r *TreeNode, parent map[int]*TreeNode) {
 		dfs1111(r.Right, parent)
 	}
 }
+
+var ss []int
+
+func findTarget(root *TreeNode, k int) bool {
+	ss = make([]int, 0)
+	toSlice(root)
+	for k2, i := range ss {
+		for k1, j := range ss {
+			if (i+j) == k && k2 != k1 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func toSlice(root *TreeNode) {
+	if root == nil {
+		return
+	}
+	toSlice(root.Left)
+	ss = append(ss, root.Val)
+	toSlice(root.Right)
+}
+
+func TestConstructor3(t *testing.T) {
+	fmt.Println(numTrees(3))
+}
+
+func numTrees(n int) int {
+	a := make([]int, n+1)
+	a[0] = 1
+	a[1] = 1
+	for i := 2; i <= n; i++ {
+		for j := 1; j <= i; j++ {
+			a[i] += a[j-1] * a[i-j]
+		}
+	}
+	return a[n]
+}
