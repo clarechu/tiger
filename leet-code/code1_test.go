@@ -1539,3 +1539,66 @@ func numTrees(n int) int {
 	}
 	return a[n]
 }
+
+//方法一
+func lengthOfLongestSubstring1(s string) int {
+	if s == "" {
+		return 0
+	}
+	bs := []byte(s)
+	c := make([][]string, len(bs))
+	for i, b := range bs {
+		c[i] = make([]string, len(bs))
+		c[i][i] = string(b)
+	}
+	max := 1
+	for i := 0; i < len(bs); i++ {
+		for j := i + 1; j < len(bs); j++ {
+
+			c[i][j] = c[i][j-1] + string(bs[j])
+			if strings.Contains(c[i][j-1], string(bs[j])) {
+				cur := len(c[i][j-1])
+				if cur > max {
+					max = cur
+				}
+				break
+			} else {
+				cur := len(c[i][j])
+				if cur > max {
+					max = cur
+				}
+			}
+		}
+	}
+	return max
+}
+
+func TestNewQueue2(t *testing.T) {
+	fmt.Println(lengthOfLongestSubstring2("abcabcbb"))
+}
+
+func lengthOfLongestSubstring2(s string) int {
+	if s == "" {
+		return 0
+	}
+	bs := []byte(s)
+	max := 1
+	for i := 0; i < len(bs); i++ {
+		for j := i + 1; j < len(bs); j++ {
+			ss := bs[i : j]
+			if strings.Contains(string(ss), string(bs[j])) {
+				cur := len(ss)
+				if cur > max {
+					max = cur
+				}
+				break
+			} else {
+				cur := len(ss) + 1
+				if cur > max {
+					max = cur
+				}
+			}
+		}
+	}
+	return max
+}
