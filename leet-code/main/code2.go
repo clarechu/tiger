@@ -97,7 +97,8 @@ func addDigits(num int) int {
 
 func main() {
 	n := []int{9, 7, 11, 31, 78, 1, 7, 66, 5, 4, 82, 100, 33, 22, 73, 234, 8}
-	quickSort3(n, 0, 16)
+	n = []int{1, 3, 2}
+	quickSort3(n, 0, 2)
 	fmt.Printf("%+v", n)
 }
 

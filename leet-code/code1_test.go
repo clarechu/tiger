@@ -18,6 +18,7 @@ package leet_code
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"sort"
 	"strings"
 	"testing"
@@ -1575,6 +1576,7 @@ func lengthOfLongestSubstring1(s string) int {
 
 func TestNewQueue2(t *testing.T) {
 	fmt.Println(lengthOfLongestSubstring2("abcabcbb"))
+	fmt.Println(findJudge(0, [][]int{{1, 2}}))
 }
 
 func lengthOfLongestSubstring2(s string) int {
@@ -1585,7 +1587,7 @@ func lengthOfLongestSubstring2(s string) int {
 	max := 1
 	for i := 0; i < len(bs); i++ {
 		for j := i + 1; j < len(bs); j++ {
-			ss := bs[i : j]
+			ss := bs[i:j]
 			if strings.Contains(string(ss), string(bs[j])) {
 				cur := len(ss)
 				if cur > max {
@@ -1601,4 +1603,106 @@ func lengthOfLongestSubstring2(s string) int {
 		}
 	}
 	return max
+}
+
+func findJudge(n int, trust [][]int) int {
+	if len(trust) == 0 && n == 1 {
+		return 1
+	}
+	a := make(map[int]int, 0)
+	b := make(map[int]int, 0)
+	for i := 0; i < len(trust); i++ {
+		x := trust[i][1]
+		y := trust[i][0]
+		if _, exist := a[y]; exist {
+			b[y] = 1
+			continue
+		}
+		a[x] = 1
+		b[y] = 1
+	}
+	for j, _ := range b {
+		delete(a, j)
+	}
+	if len(a) != 1 {
+		return -1
+	}
+	for k, _ := range a {
+		return k
+	}
+	return -1
+}
+
+func TestGenerateMatrix(t *testing.T) {
+	generateMatrix(4)
+}
+
+var kv int
+
+func generateMatrix(n int) [][]int {
+	kv = 1
+	ts := make([][]int, n)
+	for i := range ts {
+		ts[i] = make([]int, n)
+	}
+	k := n
+	for i := 0; i < n; i++ {
+		generateMatrix1(i, k, ts)
+		k--
+	}
+
+	return ts
+}
+
+func generateMatrix1(j, n int, ts [][]int) {
+	for i := j; i < n; i++ {
+		ts[j][i] = kv
+		kv++
+	}
+	for i := j + 1; i < n; i++ {
+		ts[i][n-1] = kv
+		kv++
+	}
+
+	for i := n - 2; i >= j; i-- {
+		ts[n-1][i] = kv
+		kv++
+	}
+
+	for i := n - 2; i > j; i-- {
+		ts[i][j] = kv
+		kv++
+	}
+}
+
+func TestSortArray(t *testing.T) {
+	a := quicksort([]int{1, 3, 2})
+	fmt.Printf("%+v", a)
+}
+
+
+func quicksort(a []int) []int {
+	if len(a) < 2 {
+		return a
+	}
+
+	left, right := 0, len(a)-1
+
+	pivot := rand.Int() % len(a)
+
+	a[pivot], a[right] = a[right], a[pivot]
+
+	for i, _ := range a {
+		if a[i] < a[right] {
+			a[left], a[i] = a[i], a[left]
+			left++
+		}
+	}
+
+	a[left], a[right] = a[right], a[left]
+
+	quicksort(a[:left])
+	quicksort(a[left+1:])
+
+	return a
 }
